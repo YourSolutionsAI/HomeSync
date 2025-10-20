@@ -274,26 +274,28 @@ export default function AddTaskModal({
               </select>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Unterkategorie
-              </label>
-              <select
-                value={formData.subcategory}
-                onChange={(e) =>
-                  setFormData({ ...formData, subcategory: e.target.value })
-                }
-                className="input"
-              >
-                {(SUBCATEGORIES[formData.category] || ['Allgemein']).map(
-                  (subcat) => (
+            {/* Unterkategorie nur anzeigen, wenn mehr als "Allgemein" verfügbar */}
+            {SUBCATEGORIES[formData.category] && 
+             SUBCATEGORIES[formData.category].length > 1 && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Unterkategorie
+                </label>
+                <select
+                  value={formData.subcategory}
+                  onChange={(e) =>
+                    setFormData({ ...formData, subcategory: e.target.value })
+                  }
+                  className="input"
+                >
+                  {SUBCATEGORIES[formData.category].map((subcat) => (
                     <option key={subcat} value={subcat}>
                       {subcat}
                     </option>
-                  )
-                )}
-              </select>
-            </div>
+                  ))}
+                </select>
+              </div>
+            )}
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
