@@ -15,38 +15,33 @@ export default function TaskItem({ task, onToggle, onDetail }: TaskItemProps) {
 
   return (
     <div 
-      className="flex items-start gap-3 p-3 bg-white rounded-lg border border-gray-200 hover:border-blue-300 hover:shadow-sm transition-all cursor-pointer"
+      className="flex items-start gap-4 p-4 bg-white rounded-lg border border-gray-200 hover:border-blue-400 hover:shadow-md transition-all cursor-pointer"
       onClick={onDetail}
     >
-      <div onClick={handleCheckboxClick}>
+      <div onClick={handleCheckboxClick} className="pt-0.5">
         <input
           type="checkbox"
           checked={task.done}
           onChange={() => onToggle(task.id)}
-          className="mt-1 flex-shrink-0 cursor-pointer"
+          className="w-5 h-5 flex-shrink-0 cursor-pointer accent-blue-600"
         />
       </div>
       <div className="flex-1 min-w-0">
         <h4
-          className={`text-gray-800 ${task.done ? 'task-completed' : ''}`}
+          className={`text-base font-medium text-gray-900 ${task.done ? 'task-completed' : ''}`}
         >
           {task.title}
         </h4>
-        {task.subcategory && task.subcategory !== 'Allgemein' && (
-          <span className="inline-block text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded mt-1">
-            {task.subcategory}
-          </span>
-        )}
         {task.description && (
-          <p className="text-sm text-gray-600 mt-1 line-clamp-2">
+          <p className="text-sm text-gray-600 mt-1.5 line-clamp-2 leading-relaxed">
             {task.description}
           </p>
         )}
         {(task.link || task.image_url || task.notes) && (
-          <div className="flex gap-2 mt-2 text-xs text-gray-500">
-            {task.link && <span>🔗</span>}
-            {task.image_url && <span>📷</span>}
-            {task.notes && <span>📝</span>}
+          <div className="flex gap-3 mt-2.5 text-sm text-gray-500">
+            {task.link && <span className="flex items-center gap-1">🔗 Link</span>}
+            {task.image_url && <span className="flex items-center gap-1">📷 Foto</span>}
+            {task.notes && <span className="flex items-center gap-1">📝 Notizen</span>}
           </div>
         )}
       </div>
