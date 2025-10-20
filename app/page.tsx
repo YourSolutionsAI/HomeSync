@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { SCENARIOS } from '@/lib/types';
 import { supabase } from '@/lib/supabase';
 import ConfirmModal from '@/components/ConfirmModal';
+import Toast from '@/components/Toast';
 
 export default function HomePage() {
   const router = useRouter();
@@ -15,6 +16,7 @@ export default function HomePage() {
   const [showResetModal, setShowResetModal] = useState(false);
   const [scenarioToReset, setScenarioToReset] = useState<string | null>(null);
   const [resetting, setResetting] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
   useEffect(() => {
     // Check if there are active scenarios in localStorage
@@ -60,11 +62,17 @@ export default function HomePage() {
       setActiveScenarios(updated);
       localStorage.setItem('activeScenarios', JSON.stringify(updated));
 
-      // Erfolgsmeldung (optional)
-      alert('✓ Checkliste wurde erfolgreich zurückgesetzt!');
+      // Erfolgsmeldung
+      setToast({
+        message: 'Checkliste wurde erfolgreich zurückgesetzt!',
+        type: 'success',
+      });
     } catch (error) {
       console.error('Fehler beim Zurücksetzen:', error);
-      alert('Fehler beim Zurücksetzen der Checkliste. Bitte versuchen Sie es erneut.');
+      setToast({
+        message: 'Fehler beim Zurücksetzen der Checkliste',
+        type: 'error',
+      });
     } finally {
       setResetting(false);
       setScenarioToReset(null);
@@ -192,6 +200,15 @@ export default function HomePage() {
         cancelText="Abbrechen"
         type="warning"
       />
+
+      {/* Toast Notification */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
     </AuthGuard>
   );
 }
