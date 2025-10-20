@@ -140,7 +140,20 @@ export default function ChecklistPage() {
       setTasks(resetTasks);
       await saveTasks(resetTasks);
 
+      // Remove from active scenarios
+      const saved = localStorage.getItem('activeScenarios');
+      if (saved) {
+        try {
+          const scenarios = JSON.parse(saved);
+          const updated = scenarios.filter((id: string) => id !== scenarioId);
+          localStorage.setItem('activeScenarios', JSON.stringify(updated));
+        } catch {
+          // Ignore errors
+        }
+      }
+      // Also remove old single scenario for backwards compatibility
       localStorage.removeItem('activeScenario');
+      
       router.push('/');
     } catch (error) {
       console.error('Fehler beim Zurücksetzen:', error);

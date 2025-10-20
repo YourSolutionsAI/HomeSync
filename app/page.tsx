@@ -9,25 +9,28 @@ import { SCENARIOS } from '@/lib/types';
 export default function HomePage() {
   const router = useRouter();
   const { signOut } = useAuth();
-  const [activeScenario, setActiveScenario] = useState<string | null>(null);
+  const [activeScenarios, setActiveScenarios] = useState<string[]>([]);
 
   useEffect(() => {
-    // Check if there's an active scenario in localStorage
-    const saved = localStorage.getItem('activeScenario');
+    // Check if there are active scenarios in localStorage
+    const saved = localStorage.getItem('activeScenarios');
     if (saved) {
-      setActiveScenario(saved);
+      try {
+        const scenarios = JSON.parse(saved);
+        setActiveScenarios(Array.isArray(scenarios) ? scenarios : []);
+      } catch {
+        setActiveScenarios([]);
+      }
     }
   }, []);
 
   const handleScenarioSelect = (scenarioId: string) => {
-    localStorage.setItem('activeScenario', scenarioId);
+    // Add to active scenarios if not already there
+    const updated = activeScenarios.includes(scenarioId)
+      ? activeScenarios
+      : [...activeScenarios, scenarioId];
+    localStorage.setItem('activeScenarios', JSON.stringify(updated));
     router.push(`/checklist/${scenarioId}`);
-  };
-
-  const handleContinue = () => {
-    if (activeScenario) {
-      router.push(`/checklist/${activeScenario}`);
-    }
   };
 
   const handleLogout = async () => {
@@ -59,21 +62,37 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Active Scenario */}
-          {activeScenario && (
+          {/* Active Scenarios */}
+          {activeScenarios.length > 0 && (
             <div className="card mb-8 bg-blue-50 border-blue-300">
-              <h2 className="text-xl font-semibold mb-2 text-gray-800">
-                Aktive Checkliste
+              <h2 className="text-xl font-semibold mb-4 text-gray-800">
+                Aktive Checklisten ({activeScenarios.length})
               </h2>
-              <p className="text-gray-600 mb-4">
-                Sie haben eine laufende Checkliste:{' '}
-                <strong>
-                  {SCENARIOS.find((s) => s.id === activeScenario)?.title}
-                </strong>
-              </p>
-              <button onClick={handleContinue} className="btn-primary">
-                Fortfahren →
-              </button>
+              <div className="space-y-3">
+                {activeScenarios.map((scenarioId) => {
+                  const scenario = SCENARIOS.find((s) => s.id === scenarioId);
+                  if (!scenario) return null;
+                  return (
+                    <div
+                      key={scenarioId}
+                      className="flex items-center justify-between p-3 bg-white rounded-lg border border-blue-200"
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="text-2xl">{scenario.icon}</span>
+                        <span className="font-medium text-gray-800">
+                          {scenario.title}
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => router.push(`/checklist/${scenarioId}`)}
+                        className="btn-primary text-sm"
+                      >
+                        Öffnen →
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           )}
 

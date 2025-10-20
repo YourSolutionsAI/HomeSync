@@ -9,14 +9,23 @@ interface TaskItemProps {
 }
 
 export default function TaskItem({ task, onToggle, onDetail }: TaskItemProps) {
+  const handleCheckboxClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Verhindert, dass das Detail-Modal aufgeht
+  };
+
   return (
-    <div className="flex items-start gap-3 p-3 bg-white rounded-lg border border-gray-200 hover:border-blue-300 transition-colors">
-      <input
-        type="checkbox"
-        checked={task.done}
-        onChange={() => onToggle(task.id)}
-        className="mt-1 flex-shrink-0"
-      />
+    <div 
+      className="flex items-start gap-3 p-3 bg-white rounded-lg border border-gray-200 hover:border-blue-300 hover:shadow-sm transition-all cursor-pointer"
+      onClick={onDetail}
+    >
+      <div onClick={handleCheckboxClick}>
+        <input
+          type="checkbox"
+          checked={task.done}
+          onChange={() => onToggle(task.id)}
+          className="mt-1 flex-shrink-0 cursor-pointer"
+        />
+      </div>
       <div className="flex-1 min-w-0">
         <h4
           className={`text-gray-800 ${task.done ? 'task-completed' : ''}`}
@@ -41,13 +50,6 @@ export default function TaskItem({ task, onToggle, onDetail }: TaskItemProps) {
           </div>
         )}
       </div>
-      <button
-        onClick={onDetail}
-        className="flex-shrink-0 text-blue-600 hover:text-blue-800 text-2xl px-3 py-2 hover:bg-blue-50 rounded-lg transition-colors"
-        aria-label="Details anzeigen"
-      >
-        ℹ️
-      </button>
     </div>
   );
 }
