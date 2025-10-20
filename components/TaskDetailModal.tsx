@@ -226,10 +226,31 @@ export default function TaskDetailModal({
     setShowDeleteImageModal(true);
   };
 
-  const confirmDeleteImage = () => {
-    if (imageToDelete) {
+  const confirmDeleteImage = async () => {
+    if (!imageToDelete) return;
+
+    try {
+      // Extrahiere den Dateinamen aus der URL
+      // URL Format: https://.../storage/v1/object/public/task-images/FILENAME.jpg
+      const urlParts = imageToDelete.split('/');
+      const fileName = urlParts[urlParts.length - 1];
+
+      // Lösche Bild aus Supabase Storage
+      const { error } = await supabase.storage
+        .from('task-images')
+        .remove([fileName]);
+
+      if (error) {
+        console.error('Fehler beim Löschen des Bildes aus Storage:', error);
+        // Trotzdem fortfahren und aus der DB entfernen
+      }
+
+      // Entferne aus State
       setExistingImages(prev => prev.filter(url => url !== imageToDelete));
       setImageToDelete(null);
+    } catch (error) {
+      console.error('Fehler beim Löschen des Bildes:', error);
+      alert('Fehler beim Löschen des Bildes aus dem Storage');
     }
   };
 
@@ -311,6 +332,24 @@ export default function TaskDetailModal({
 
   const confirmDeleteTask = async () => {
     try {
+      // Lösche zuerst alle Bilder aus dem Storage
+      if (existingImages.length > 0) {
+        const fileNames = existingImages.map(url => {
+          const urlParts = url.split('/');
+          return urlParts[urlParts.length - 1];
+        });
+
+        const { error: storageError } = await supabase.storage
+          .from('task-images')
+          .remove(fileNames);
+
+        if (storageError) {
+          console.error('Fehler beim Löschen der Bilder aus Storage:', storageError);
+          // Fortfahren trotz Fehler
+        }
+      }
+
+      // Dann lösche die Aufgabe aus der Datenbank
       const { error } = await (supabase.from('tasks') as any).delete().eq('id', task.id);
 
       if (error) throw error;
