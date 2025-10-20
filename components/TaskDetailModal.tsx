@@ -10,6 +10,35 @@ interface TaskDetailModalProps {
   onUpdate: () => void;
 }
 
+// Kategorien und Unterkategorien (gleich wie in AddTaskModal)
+const CATEGORIES = [
+  'Spezielles',
+  'Vorbereitung Abreisehaus',
+  'Am Abreisetag',
+  'Hausverwaltung',
+  'Haus verschließen',
+  'Sicherheit',
+  'Aufgaben unterwegs/Flughafen',
+  'Bei Ankunft im Zielhaus',
+];
+
+const SUBCATEGORIES: Record<string, string[]> = {
+  'Spezielles': ['Allgemein', 'Wichtige Informationen'],
+  'Vorbereitung Abreisehaus': [
+    'Allgemein', 'Schlafzimmer', 'Büro', 'Gäste Apartment', 'Küche',
+    'Hauswirtschaftsraum', 'Garage', 'Wohnzimmer', 'Badezimmer', 'Außenbereich',
+  ],
+  'Am Abreisetag': ['Allgemein', 'Schlafzimmer', 'Küche', 'Garage', 'Außenbereich'],
+  'Hausverwaltung': ['Allgemein', 'Elektronik', 'Heizung/Klima', 'Wasser', 'Gas', 'Außenbereich', 'Pool'],
+  'Haus verschließen': [
+    'Allgemein', 'Fenster und Türen', 'Schlüssel', 'Schlafzimmer', 'Büro',
+    'Gäste Apartment', 'Garage', 'Hauswirtschaftsraum', 'Wohnzimmer',
+  ],
+  'Sicherheit': ['Allgemein', 'Alarmanlage'],
+  'Aufgaben unterwegs/Flughafen': ['Allgemein', 'Check-in', 'Gepäck', 'Sicherheit', 'Boarding'],
+  'Bei Ankunft im Zielhaus': ['Allgemein', 'Elektronik einschalten', 'Heizung/Klima', 'Küche', 'Sicherheit'],
+};
+
 export default function TaskDetailModal({
   task,
   onClose,
@@ -19,19 +48,88 @@ export default function TaskDetailModal({
   const [formData, setFormData] = useState({
     title: task.title,
     description: task.description || '',
+    category: task.category,
+    subcategory: task.subcategory || 'Allgemein',
     link: task.link || '',
     notes: task.notes || '',
   });
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  const handleCategoryChange = (newCategory: string) => {
+    setFormData({
+      ...formData,
+      category: newCategory,
+      subcategory: SUBCATEGORIES[newCategory]?.[0] || 'Allgemein',
+    });
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        alert('Datei ist zu groß! Maximale Größe: 5MB');
+        return;
+      }
+      if (!file.type.startsWith('image/')) {
+        alert('Bitte wählen Sie eine Bilddatei aus!');
+        return;
+      }
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const uploadImage = async (): Promise<string | null> => {
+    if (!imageFile) return null;
+    setUploading(true);
+    try {
+      const fileExt = imageFile.name.split('.').pop();
+      const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
+      const filePath = `task-images/${fileName}`;
+      const { error: uploadError } = await supabase.storage
+        .from('task-images')
+        .upload(filePath, imageFile);
+      if (uploadError) throw uploadError;
+      const { data } = supabase.storage.from('task-images').getPublicUrl(filePath);
+      return data.publicUrl;
+    } catch (error) {
+      console.error('Fehler beim Hochladen des Bildes:', error);
+      alert('Fehler beim Hochladen des Bildes');
+      return null;
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const handleSave = async () => {
     setSaving(true);
     try {
+      // Upload new image if exists
+      let imageUrl: string | null = task.image_url;
+      if (imageFile) {
+        const newUrl = await uploadImage();
+        if (newUrl) imageUrl = newUrl;
+        else if (imageFile) {
+          setSaving(false);
+          return;
+        }
+      }
+
       const { error } = await (supabase.from('tasks') as any)
         .update({
           title: formData.title,
           description: formData.description || null,
+          category: formData.category,
+          subcategory: formData.subcategory || null,
           link: formData.link || null,
+          image_url: imageUrl,
           notes: formData.notes || null,
           updated_at: new Date().toISOString(),
         })
@@ -101,6 +199,45 @@ export default function TaskDetailModal({
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Kategorie
+                </label>
+                <select
+                  value={formData.category}
+                  onChange={(e) => handleCategoryChange(e.target.value)}
+                  className="input"
+                >
+                  {CATEGORIES.map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {SUBCATEGORIES[formData.category] && 
+               SUBCATEGORIES[formData.category].length > 1 && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Unterkategorie
+                  </label>
+                  <select
+                    value={formData.subcategory}
+                    onChange={(e) =>
+                      setFormData({ ...formData, subcategory: e.target.value })
+                    }
+                    className="input"
+                  >
+                    {SUBCATEGORIES[formData.category].map((subcat) => (
+                      <option key={subcat} value={subcat}>
+                        {subcat}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Beschreibung
                 </label>
                 <textarea
@@ -130,6 +267,42 @@ export default function TaskDetailModal({
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Foto {task.image_url ? 'ändern' : 'hinzufügen'}
+                </label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="input"
+                />
+                {(imagePreview || task.image_url) && (
+                  <div className="mt-2">
+                    <img
+                      src={imagePreview || task.image_url!}
+                      alt="Vorschau"
+                      className="w-full max-w-xs rounded-lg border"
+                    />
+                    {imagePreview && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setImageFile(null);
+                          setImagePreview(null);
+                        }}
+                        className="text-red-600 text-sm mt-1 hover:underline"
+                      >
+                        Neues Bild entfernen
+                      </button>
+                    )}
+                  </div>
+                )}
+                <p className="text-xs text-gray-500 mt-1">
+                  Max. 5MB, Formate: JPG, PNG, GIF, WebP
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Notizen
                 </label>
                 <textarea
@@ -145,10 +318,14 @@ export default function TaskDetailModal({
               <div className="flex gap-2">
                 <button
                   onClick={handleSave}
-                  disabled={saving || !formData.title}
+                  disabled={saving || uploading || !formData.title}
                   className="btn-primary flex-1"
                 >
-                  {saving ? 'Speichern...' : 'Speichern'}
+                  {uploading
+                    ? 'Bild wird hochgeladen...'
+                    : saving
+                    ? 'Speichern...'
+                    : 'Speichern'}
                 </button>
                 <button
                   onClick={() => setEditing(false)}
@@ -171,11 +348,6 @@ export default function TaskDetailModal({
                   {task.subcategory && task.subcategory !== 'Allgemein' && (
                     <span className="text-sm bg-gray-100 text-gray-700 px-2 py-1 rounded">
                       {task.subcategory}
-                    </span>
-                  )}
-                  {task.transport_type && task.transport_type !== 'Nicht zutreffend' && (
-                    <span className="text-sm bg-purple-100 text-purple-800 px-2 py-1 rounded">
-                      {task.transport_type === 'Auto' ? '🚗' : '✈️'} {task.transport_type}
                     </span>
                   )}
                   <span

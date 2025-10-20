@@ -28,11 +28,6 @@ export default function TaskItem({ task, onToggle, onDetail }: TaskItemProps) {
             {task.subcategory}
           </span>
         )}
-        {task.transport_type && task.transport_type !== 'Nicht zutreffend' && (
-          <span className="inline-block text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded mt-1 ml-1">
-            {task.transport_type === 'Auto' ? '🚗' : '✈️'} {task.transport_type}
-          </span>
-        )}
         {task.description && (
           <p className="text-sm text-gray-600 mt-1 line-clamp-2">
             {task.description}
@@ -48,7 +43,8 @@ export default function TaskItem({ task, onToggle, onDetail }: TaskItemProps) {
       </div>
       <button
         onClick={onDetail}
-        className="flex-shrink-0 text-blue-600 hover:text-blue-800 text-sm"
+        className="flex-shrink-0 text-blue-600 hover:text-blue-800 text-2xl px-3 py-2 hover:bg-blue-50 rounded-lg transition-colors"
+        aria-label="Details anzeigen"
       >
         ℹ️
       </button>

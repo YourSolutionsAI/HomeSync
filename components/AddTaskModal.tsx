@@ -11,18 +11,20 @@ interface AddTaskModalProps {
 }
 
 const CATEGORIES = [
-  'Vorbereitungen zuhause (Packen)',
-  'Aufgaben unterwegs/Flughafen',
-  'Bei Ankunft im Zielhaus',
+  'Spezielles', // Immer ganz oben
+  'Vorbereitung Abreisehaus',
+  'Am Abreisetag',
   'Hausverwaltung',
   'Haus verschließen',
   'Sicherheit',
-  'Sonstiges',
+  'Aufgaben unterwegs/Flughafen',
+  'Bei Ankunft im Zielhaus',
 ];
 
 // Unterkategorien pro Kategorie
 const SUBCATEGORIES: Record<string, string[]> = {
-  'Vorbereitungen zuhause (Packen)': [
+  'Spezielles': ['Allgemein', 'Wichtige Informationen'],
+  'Vorbereitung Abreisehaus': [
     'Allgemein',
     'Schlafzimmer',
     'Büro',
@@ -32,6 +34,13 @@ const SUBCATEGORIES: Record<string, string[]> = {
     'Garage',
     'Wohnzimmer',
     'Badezimmer',
+    'Außenbereich',
+  ],
+  'Am Abreisetag': [
+    'Allgemein',
+    'Schlafzimmer',
+    'Küche',
+    'Garage',
     'Außenbereich',
   ],
   'Hausverwaltung': [
@@ -47,7 +56,6 @@ const SUBCATEGORIES: Record<string, string[]> = {
     'Allgemein',
     'Fenster und Türen',
     'Schlüssel',
-    'Sicherheit',
     'Schlafzimmer',
     'Büro',
     'Gäste Apartment',
@@ -55,6 +63,7 @@ const SUBCATEGORIES: Record<string, string[]> = {
     'Hauswirtschaftsraum',
     'Wohnzimmer',
   ],
+  'Sicherheit': ['Allgemein', 'Alarmanlage'],
   'Aufgaben unterwegs/Flughafen': [
     'Allgemein',
     'Check-in',
@@ -69,8 +78,6 @@ const SUBCATEGORIES: Record<string, string[]> = {
     'Küche',
     'Sicherheit',
   ],
-  'Sicherheit': ['Allgemein'],
-  'Sonstiges': ['Allgemein'],
 };
 
 export default function AddTaskModal({
@@ -86,7 +93,6 @@ export default function AddTaskModal({
     subcategory: 'Allgemein',
     link: '',
     notes: '',
-    transportType: 'Nicht zutreffend' as TransportType,
   });
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -195,7 +201,7 @@ export default function AddTaskModal({
         link: formData.link || null,
         image_url: imageUrl,
         notes: formData.notes || null,
-        transport_type: formData.transportType,
+        transport_type: null, // Wird auf Checklisten-Ebene gesetzt
         done: false,
       });
 
@@ -295,29 +301,6 @@ export default function AddTaskModal({
                 </select>
               </div>
             )}
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Transportmittel
-              </label>
-              <select
-                value={formData.transportType}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    transportType: e.target.value as TransportType,
-                  })
-                }
-                className="input"
-              >
-                <option value="Nicht zutreffend">Nicht zutreffend</option>
-                <option value="Auto">Auto</option>
-                <option value="Flugzeug">Flugzeug</option>
-              </select>
-              <p className="text-xs text-gray-500 mt-1">
-                Nur relevant für Reise-Szenarien
-              </p>
-            </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
