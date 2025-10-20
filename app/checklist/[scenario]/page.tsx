@@ -201,31 +201,70 @@ export default function ChecklistPage() {
 
   const CATEGORY_ORDER = isVorOrt ? CATEGORY_ORDER_VOR_ORT : CATEGORY_ORDER_REISE;
 
-  // Unterkategorie-Reihenfolge für bessere Sortierung
-  const SUBCATEGORY_ORDER_REISE: Record<string, string[]> = {
-    'Vorbereitung Abreisehaus': [
-      'Schlafzimmer', 'Büro', 'Gäste Apartment', 'Küche', 'Hauswirtschaftsraum',
-      'Garage', 'Wohnzimmer', 'Badezimmer', 'Außenbereich', 'Allgemein'
-    ],
-    'Am Abreisetag': ['Schlafzimmer', 'Küche', 'Garage', 'Außenbereich', 'Allgemein'],
-    'Hausverwaltung': ['Elektronik', 'Heizung/Klima', 'Wasser', 'Gas', 'Außenbereich', 'Pool', 'Allgemein'],
-    'Haus verschließen': [
-      'Fenster und Türen', 'Schlafzimmer', 'Büro', 'Gäste Apartment',
-      'Garage', 'Hauswirtschaftsraum', 'Wohnzimmer', 'Schlüssel', 'Allgemein'
-    ],
-  };
+  // Räume für Benissa
+  const ROOMS_BENISSA = [
+    'Küche', 'Schlafzimmer', 'Wohnzimmer', 'Balkon', 'Hauswirtschaftsraum',
+    'Gäste WC', 'Außenbereich', 'Pool', 'Garage', 'Büro', 'Gäste Appartment', 'Allgemein'
+  ];
 
-  const SUBCATEGORY_ORDER_VOR_ORT: Record<string, string[]> = {
-    'Regelmäßige Wartung': ['Wöchentlich', 'Monatlich', 'Saisonal', 'Heizung/Klima', 'Elektronik', 'Wasser', 'Allgemein'],
-    'Pool & Garten': ['Pool Pflege', 'Poolchemie', 'Rasen', 'Pflanzen', 'Bewässerung', 'Terrasse', 'Allgemein'],
-    'Haustechnik': ['Heizung/Klima', 'Elektrik', 'Wasser/Sanitär', 'Gas', 'Alarmanlage', 'Rollläden', 'Allgemein'],
-    'Reinigung & Ordnung': ['Schlafzimmer', 'Küche', 'Bad', 'Wohnzimmer', 'Garage', 'Außenbereich', 'Fenster', 'Allgemein'],
-    'Einkaufen & Besorgungen': ['Lebensmittel', 'Haushalt', 'Poolbedarf', 'Garten', 'Werkzeug', 'Allgemein'],
-    'Reparaturen': ['Dringend', 'Geplant', 'Kleinreparaturen', 'Allgemein'],
-    'Sicherheit': ['Alarmanlage', 'Schlüssel', 'Beleuchtung', 'Allgemein'],
-  };
+  // Räume für Niederlauterbach
+  const ROOMS_NIEDERLAUTERBACH = [
+    'Schlafzimmer', 'Hobbyraum', 'WC 1. Stock', 'Badezimmer', 'Büro',
+    'Küche', 'Ankleidezimmer', 'Wohnzimmer', 'Terrasse', 'Außenbereich',
+    'Garage', 'Treppenhaus Garage', 'Allgemein'
+  ];
 
-  const SUBCATEGORY_ORDER = isVorOrt ? SUBCATEGORY_ORDER_VOR_ORT : SUBCATEGORY_ORDER_REISE;
+  // Unterkategorie-Reihenfolge basierend auf Location und Kategorie
+  const getSubcategoryOrder = (category: string): string[] => {
+    if (!scenario) return [];
+    
+    const rooms = scenario.location === 'Benissa' ? ROOMS_BENISSA : ROOMS_NIEDERLAUTERBACH;
+    
+    if (isVorOrt) {
+      // VOR ORT Unterkategorien
+      switch (category) {
+        case 'Regelmäßige Wartung':
+          return ['Wöchentlich', 'Monatlich', 'Saisonal', 'Heizung/Klima', 'Elektronik', 'Wasser', 'Allgemein'];
+        case 'Pool & Garten':
+          return scenario.location === 'Benissa'
+            ? ['Pool Pflege', 'Poolchemie', 'Rasen', 'Pflanzen', 'Bewässerung', 'Terrasse', 'Allgemein']
+            : ['Rasen', 'Pflanzen', 'Bewässerung', 'Terrasse', 'Allgemein'];
+        case 'Haustechnik':
+          return ['Heizung/Klima', 'Elektrik', 'Wasser/Sanitär', 'Gas', 'Alarmanlage', 'Rollläden', 'Allgemein'];
+        case 'Reinigung & Ordnung':
+          return rooms;
+        case 'Einkaufen & Besorgungen':
+          return scenario.location === 'Benissa'
+            ? ['Lebensmittel', 'Haushalt', 'Poolbedarf', 'Garten', 'Werkzeug', 'Allgemein']
+            : ['Lebensmittel', 'Haushalt', 'Garten', 'Werkzeug', 'Allgemein'];
+        case 'Reparaturen':
+          return ['Dringend', 'Geplant', 'Kleinreparaturen', 'Allgemein'];
+        case 'Sicherheit':
+          return ['Alarmanlage', 'Schlüssel', 'Beleuchtung', 'Allgemein'];
+        default:
+          return ['Allgemein'];
+      }
+    } else {
+      // REISE Unterkategorien
+      switch (category) {
+        case 'Vorbereitung Abreisehaus':
+        case 'Am Abreisetag':
+          return rooms; // Gleiche Räume für beide
+        case 'Hausverwaltung':
+          return ['Elektronik', 'Heizung/Klima', 'Wasser', 'Gas', 'Außenbereich', 'Pool', 'Allgemein'];
+        case 'Haus verschließen':
+          return ['Fenster und Türen', 'Schlüssel', ...rooms.filter(r => r !== 'Allgemein'), 'Allgemein'];
+        case 'Sicherheit':
+          return ['Alarmanlage', 'Allgemein'];
+        case 'Aufgaben unterwegs/Flughafen':
+          return ['Check-in', 'Gepäck', 'Sicherheit', 'Boarding', 'Allgemein'];
+        case 'Bei Ankunft im Zielhaus':
+          return ['Elektronik einschalten', 'Heizung/Klima', 'Küche', 'Sicherheit', 'Allgemein'];
+        default:
+          return ['Allgemein'];
+      }
+    }
+  };
 
   // Group tasks by category and subcategory
   const groupedTasks = tasks.reduce((acc, task) => {
@@ -252,8 +291,8 @@ export default function ChecklistPage() {
 
   // Helper function to sort subcategories
   const getSortedSubcategories = (category: string, subcategories: string[]) => {
-    const order = SUBCATEGORY_ORDER[category];
-    if (!order) return subcategories.sort();
+    const order = getSubcategoryOrder(category);
+    if (order.length === 0) return subcategories.sort();
     
     return subcategories.sort((a, b) => {
       const indexA = order.indexOf(a);

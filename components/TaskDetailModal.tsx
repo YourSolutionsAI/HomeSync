@@ -34,43 +34,92 @@ const CATEGORIES_VOR_ORT = [
   'Sicherheit',
 ];
 
-// Unterkategorien für REISE
-const SUBCATEGORIES_REISE: Record<string, string[]> = {
-  'Spezielles': ['Allgemein', 'Wichtige Informationen'],
-  'Vorbereitung Abreisehaus': [
-    'Allgemein', 'Schlafzimmer', 'Büro', 'Gäste Apartment', 'Küche',
-    'Hauswirtschaftsraum', 'Garage', 'Wohnzimmer', 'Badezimmer', 'Außenbereich',
-  ],
-  'Am Abreisetag': ['Allgemein', 'Schlafzimmer', 'Küche', 'Garage', 'Außenbereich'],
-  'Hausverwaltung': ['Allgemein', 'Elektronik', 'Heizung/Klima', 'Wasser', 'Gas', 'Außenbereich', 'Pool'],
-  'Haus verschließen': [
-    'Allgemein', 'Fenster und Türen', 'Schlüssel', 'Schlafzimmer', 'Büro',
-    'Gäste Apartment', 'Garage', 'Hauswirtschaftsraum', 'Wohnzimmer',
-  ],
-  'Sicherheit': ['Allgemein', 'Alarmanlage'],
-  'Aufgaben unterwegs/Flughafen': ['Allgemein', 'Check-in', 'Gepäck', 'Sicherheit', 'Boarding'],
-  'Bei Ankunft im Zielhaus': ['Allgemein', 'Elektronik einschalten', 'Heizung/Klima', 'Küche', 'Sicherheit'],
+// Räume für Benissa
+const ROOMS_BENISSA = [
+  'Allgemein',
+  'Küche',
+  'Schlafzimmer',
+  'Wohnzimmer',
+  'Balkon',
+  'Hauswirtschaftsraum',
+  'Gäste WC',
+  'Außenbereich',
+  'Pool',
+  'Garage',
+  'Büro',
+  'Gäste Appartment',
+];
+
+// Räume für Niederlauterbach
+const ROOMS_NIEDERLAUTERBACH = [
+  'Allgemein',
+  'Schlafzimmer',
+  'Hobbyraum',
+  'WC 1. Stock',
+  'Badezimmer',
+  'Büro',
+  'Küche',
+  'Ankleidezimmer',
+  'Wohnzimmer',
+  'Terrasse',
+  'Außenbereich',
+  'Garage',
+  'Treppenhaus Garage',
+];
+
+// Funktion zum Abrufen der Unterkategorien basierend auf Location
+const getSubcategoriesReise = (category: string, location: 'Benissa' | 'Niederlauterbach'): string[] => {
+  const rooms = location === 'Benissa' ? ROOMS_BENISSA : ROOMS_NIEDERLAUTERBACH;
+  
+  switch (category) {
+    case 'Spezielles':
+      return ['Allgemein', 'Wichtige Informationen'];
+    case 'Vorbereitung Abreisehaus':
+    case 'Am Abreisetag':
+      return rooms; // Gleiche Räume für beide Kategorien
+    case 'Hausverwaltung':
+      return ['Allgemein', 'Elektronik', 'Heizung/Klima', 'Wasser', 'Gas', 'Außenbereich', 'Pool'];
+    case 'Haus verschließen':
+      return ['Allgemein', 'Fenster und Türen', 'Schlüssel', ...rooms.filter(r => r !== 'Allgemein')];
+    case 'Sicherheit':
+      return ['Allgemein', 'Alarmanlage'];
+    case 'Aufgaben unterwegs/Flughafen':
+      return ['Allgemein', 'Check-in', 'Gepäck', 'Sicherheit', 'Boarding'];
+    case 'Bei Ankunft im Zielhaus':
+      return ['Allgemein', 'Elektronik einschalten', 'Heizung/Klima', 'Küche', 'Sicherheit'];
+    default:
+      return ['Allgemein'];
+  }
 };
 
-// Unterkategorien für VOR ORT
-const SUBCATEGORIES_VOR_ORT: Record<string, string[]> = {
-  'Spezielles': ['Allgemein', 'Wichtige Informationen'],
-  'Regelmäßige Wartung': [
-    'Allgemein', 'Wöchentlich', 'Monatlich', 'Saisonal',
-    'Heizung/Klima', 'Elektronik', 'Wasser',
-  ],
-  'Pool & Garten': ['Allgemein', 'Pool Pflege', 'Poolchemie', 'Rasen', 'Pflanzen', 'Bewässerung', 'Terrasse'],
-  'Haustechnik': [
-    'Allgemein', 'Heizung/Klima', 'Elektrik', 'Wasser/Sanitär',
-    'Gas', 'Alarmanlage', 'Rollläden',
-  ],
-  'Reinigung & Ordnung': [
-    'Allgemein', 'Schlafzimmer', 'Küche', 'Bad', 'Wohnzimmer',
-    'Garage', 'Außenbereich', 'Fenster',
-  ],
-  'Einkaufen & Besorgungen': ['Allgemein', 'Lebensmittel', 'Haushalt', 'Poolbedarf', 'Garten', 'Werkzeug'],
-  'Reparaturen': ['Allgemein', 'Dringend', 'Geplant', 'Kleinreparaturen'],
-  'Sicherheit': ['Allgemein', 'Alarmanlage', 'Schlüssel', 'Beleuchtung'],
+// Funktion zum Abrufen der Unterkategorien für VOR ORT basierend auf Location
+const getSubcategoriesVorOrt = (category: string, location: 'Benissa' | 'Niederlauterbach'): string[] => {
+  const rooms = location === 'Benissa' ? ROOMS_BENISSA : ROOMS_NIEDERLAUTERBACH;
+  
+  switch (category) {
+    case 'Spezielles':
+      return ['Allgemein', 'Wichtige Informationen'];
+    case 'Regelmäßige Wartung':
+      return ['Allgemein', 'Wöchentlich', 'Monatlich', 'Saisonal', 'Heizung/Klima', 'Elektronik', 'Wasser'];
+    case 'Pool & Garten':
+      return location === 'Benissa' 
+        ? ['Allgemein', 'Pool Pflege', 'Poolchemie', 'Rasen', 'Pflanzen', 'Bewässerung', 'Terrasse']
+        : ['Allgemein', 'Rasen', 'Pflanzen', 'Bewässerung', 'Terrasse'];
+    case 'Haustechnik':
+      return ['Allgemein', 'Heizung/Klima', 'Elektrik', 'Wasser/Sanitär', 'Gas', 'Alarmanlage', 'Rollläden'];
+    case 'Reinigung & Ordnung':
+      return rooms; // Alle Räume für Reinigung
+    case 'Einkaufen & Besorgungen':
+      return location === 'Benissa'
+        ? ['Allgemein', 'Lebensmittel', 'Haushalt', 'Poolbedarf', 'Garten', 'Werkzeug']
+        : ['Allgemein', 'Lebensmittel', 'Haushalt', 'Garten', 'Werkzeug'];
+    case 'Reparaturen':
+      return ['Allgemein', 'Dringend', 'Geplant', 'Kleinreparaturen'];
+    case 'Sicherheit':
+      return ['Allgemein', 'Alarmanlage', 'Schlüssel', 'Beleuchtung'];
+    default:
+      return ['Allgemein'];
+  }
 };
 
 export default function TaskDetailModal({
@@ -81,7 +130,13 @@ export default function TaskDetailModal({
   // Wähle Kategorien basierend auf Task-Typ
   const isVorOrt = task.type === 'Vor Ort';
   const CATEGORIES = isVorOrt ? CATEGORIES_VOR_ORT : CATEGORIES_REISE;
-  const SUBCATEGORIES = isVorOrt ? SUBCATEGORIES_VOR_ORT : SUBCATEGORIES_REISE;
+  
+  // Funktion zum Abrufen der Unterkategorien basierend auf Kategorie
+  const getSubcategories = (category: string): string[] => {
+    return isVorOrt 
+      ? getSubcategoriesVorOrt(category, task.location)
+      : getSubcategoriesReise(category, task.location);
+  };
 
   const [editing, setEditing] = useState(false);
   const [formData, setFormData] = useState({
@@ -98,10 +153,11 @@ export default function TaskDetailModal({
   const [saving, setSaving] = useState(false);
 
   const handleCategoryChange = (newCategory: string) => {
+    const subcategories = getSubcategories(newCategory);
     setFormData({
       ...formData,
       category: newCategory,
-      subcategory: SUBCATEGORIES[newCategory]?.[0] || 'Allgemein',
+      subcategory: subcategories[0] || 'Allgemein',
     });
   };
 
@@ -151,7 +207,7 @@ export default function TaskDetailModal({
     setSaving(true);
     try {
       // Upload new image if exists
-      let imageUrl: string | null = task.image_url;
+      let imageUrl: string | null = task.image_url || null;
       if (imageFile) {
         const newUrl = await uploadImage();
         if (newUrl) imageUrl = newUrl;
@@ -253,27 +309,29 @@ export default function TaskDetailModal({
                 </select>
               </div>
 
-              {SUBCATEGORIES[formData.category] && 
-               SUBCATEGORIES[formData.category].length > 1 && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Unterkategorie
-                  </label>
-                  <select
-                    value={formData.subcategory}
-                    onChange={(e) =>
-                      setFormData({ ...formData, subcategory: e.target.value })
-                    }
-                    className="input"
-                  >
-                    {SUBCATEGORIES[formData.category].map((subcat) => (
-                      <option key={subcat} value={subcat}>
-                        {subcat}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
+              {(() => {
+                const subcategories = getSubcategories(formData.category);
+                return subcategories.length > 1 && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Unterkategorie
+                    </label>
+                    <select
+                      value={formData.subcategory}
+                      onChange={(e) =>
+                        setFormData({ ...formData, subcategory: e.target.value })
+                      }
+                      className="input"
+                    >
+                      {subcategories.map((subcat) => (
+                        <option key={subcat} value={subcat}>
+                          {subcat}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                );
+              })()}
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
