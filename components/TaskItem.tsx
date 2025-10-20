@@ -23,6 +23,16 @@ export default function TaskItem({ task, onToggle, onDetail }: TaskItemProps) {
         >
           {task.title}
         </h4>
+        {task.subcategory && task.subcategory !== 'Allgemein' && (
+          <span className="inline-block text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded mt-1">
+            {task.subcategory}
+          </span>
+        )}
+        {task.transport_type && task.transport_type !== 'Nicht zutreffend' && (
+          <span className="inline-block text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded mt-1 ml-1">
+            {task.transport_type === 'Auto' ? '🚗' : '✈️'} {task.transport_type}
+          </span>
+        )}
         {task.description && (
           <p className="text-sm text-gray-600 mt-1 line-clamp-2">
             {task.description}

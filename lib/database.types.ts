@@ -15,14 +15,16 @@ export interface Database {
           title: string
           description: string | null
           category: string
+          subcategory: string | null
           location: 'Niederlauterbach' | 'Benissa'
-          type: 'Abfahrt' | 'Abflug' | 'Vor Ort'
+          type: 'Abfahrt' | 'Abflug' | 'Vor Ort' | 'Reise'
           scenario: string
           done: boolean
           order: number
           link: string | null
           image_url: string | null
           notes: string | null
+          transport_type: 'Auto' | 'Flugzeug' | 'Nicht zutreffend' | null
           created_at: string
           updated_at: string
         }
@@ -31,14 +33,16 @@ export interface Database {
           title: string
           description?: string | null
           category: string
+          subcategory?: string | null
           location: 'Niederlauterbach' | 'Benissa'
-          type: 'Abfahrt' | 'Abflug' | 'Vor Ort'
+          type: 'Abfahrt' | 'Abflug' | 'Vor Ort' | 'Reise'
           scenario: string
           done?: boolean
           order: number
           link?: string | null
           image_url?: string | null
           notes?: string | null
+          transport_type?: 'Auto' | 'Flugzeug' | 'Nicht zutreffend' | null
           created_at?: string
           updated_at?: string
         }
@@ -47,14 +51,16 @@ export interface Database {
           title?: string
           description?: string | null
           category?: string
+          subcategory?: string | null
           location?: 'Niederlauterbach' | 'Benissa'
-          type?: 'Abfahrt' | 'Abflug' | 'Vor Ort'
+          type?: 'Abfahrt' | 'Abflug' | 'Vor Ort' | 'Reise'
           scenario?: string
           done?: boolean
           order?: number
           link?: string | null
           image_url?: string | null
           notes?: string | null
+          transport_type?: 'Auto' | 'Flugzeug' | 'Nicht zutreffend' | null
           created_at?: string
           updated_at?: string
         }

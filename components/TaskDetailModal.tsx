@@ -165,10 +165,20 @@ export default function TaskDetailModal({
                 <h3 className="text-xl font-semibold text-gray-800">
                   {task.title}
                 </h3>
-                <div className="flex gap-2 mt-2">
+                <div className="flex gap-2 mt-2 flex-wrap">
                   <span className="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded">
                     {task.category}
                   </span>
+                  {task.subcategory && task.subcategory !== 'Allgemein' && (
+                    <span className="text-sm bg-gray-100 text-gray-700 px-2 py-1 rounded">
+                      {task.subcategory}
+                    </span>
+                  )}
+                  {task.transport_type && task.transport_type !== 'Nicht zutreffend' && (
+                    <span className="text-sm bg-purple-100 text-purple-800 px-2 py-1 rounded">
+                      {task.transport_type === 'Auto' ? '🚗' : '✈️'} {task.transport_type}
+                    </span>
+                  )}
                   <span
                     className={`text-sm px-2 py-1 rounded ${
                       task.done

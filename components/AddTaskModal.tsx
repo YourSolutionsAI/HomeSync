@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { SCENARIOS } from '@/lib/types';
+import { SCENARIOS, TransportType } from '@/lib/types';
 
 interface AddTaskModalProps {
   scenarioId: string;
@@ -15,9 +15,63 @@ const CATEGORIES = [
   'Aufgaben unterwegs/Flughafen',
   'Bei Ankunft im Zielhaus',
   'Hausverwaltung',
+  'Haus verschließen',
   'Sicherheit',
   'Sonstiges',
 ];
+
+// Unterkategorien pro Kategorie
+const SUBCATEGORIES: Record<string, string[]> = {
+  'Vorbereitungen zuhause (Packen)': [
+    'Allgemein',
+    'Schlafzimmer',
+    'Büro',
+    'Gäste Apartment',
+    'Küche',
+    'Hauswirtschaftsraum',
+    'Garage',
+    'Wohnzimmer',
+    'Badezimmer',
+    'Außenbereich',
+  ],
+  'Hausverwaltung': [
+    'Allgemein',
+    'Elektronik',
+    'Heizung/Klima',
+    'Wasser',
+    'Gas',
+    'Außenbereich',
+    'Pool',
+  ],
+  'Haus verschließen': [
+    'Allgemein',
+    'Fenster und Türen',
+    'Schlüssel',
+    'Sicherheit',
+    'Schlafzimmer',
+    'Büro',
+    'Gäste Apartment',
+    'Garage',
+    'Hauswirtschaftsraum',
+    'Wohnzimmer',
+  ],
+  'Aufgaben unterwegs/Flughafen': [
+    'Allgemein',
+    'Check-in',
+    'Gepäck',
+    'Sicherheit',
+    'Boarding',
+  ],
+  'Bei Ankunft im Zielhaus': [
+    'Allgemein',
+    'Elektronik einschalten',
+    'Heizung/Klima',
+    'Küche',
+    'Sicherheit',
+  ],
+  'Sicherheit': ['Allgemein'],
+  'Sonstiges': ['Allgemein'],
+};
 
 export default function AddTaskModal({
   scenarioId,
@@ -29,10 +83,79 @@ export default function AddTaskModal({
     title: '',
     description: '',
     category: CATEGORIES[0],
+    subcategory: 'Allgemein',
     link: '',
     notes: '',
+    transportType: 'Nicht zutreffend' as TransportType,
   });
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  const handleCategoryChange = (newCategory: string) => {
+    setFormData({
+      ...formData,
+      category: newCategory,
+      subcategory: SUBCATEGORIES[newCategory]?.[0] || 'Allgemein',
+    });
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Überprüfe Dateigröße (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        alert('Datei ist zu groß! Maximale Größe: 5MB');
+        return;
+      }
+
+      // Überprüfe Dateityp
+      if (!file.type.startsWith('image/')) {
+        alert('Bitte wählen Sie eine Bilddatei aus!');
+        return;
+      }
+
+      setImageFile(file);
+
+      // Erstelle Vorschau
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const uploadImage = async (): Promise<string | null> => {
+    if (!imageFile) return null;
+
+    setUploading(true);
+    try {
+      const fileExt = imageFile.name.split('.').pop();
+      const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
+      const filePath = `task-images/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('task-images')
+        .upload(filePath, imageFile);
+
+      if (uploadError) throw uploadError;
+
+      // Hole die öffentliche URL
+      const { data } = supabase.storage
+        .from('task-images')
+        .getPublicUrl(filePath);
+
+      return data.publicUrl;
+    } catch (error) {
+      console.error('Fehler beim Hochladen des Bildes:', error);
+      alert('Fehler beim Hochladen des Bildes');
+      return null;
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,6 +163,17 @@ export default function AddTaskModal({
 
     setSaving(true);
     try {
+      // Upload image if exists
+      let imageUrl: string | null = null;
+      if (imageFile) {
+        imageUrl = await uploadImage();
+        if (!imageUrl && imageFile) {
+          // Upload failed but user had selected an image
+          setSaving(false);
+          return;
+        }
+      }
+
       // Get the max order for this scenario
       const { data: existingTasks } = await supabase
         .from('tasks')
@@ -54,12 +188,15 @@ export default function AddTaskModal({
         title: formData.title,
         description: formData.description || null,
         category: formData.category,
+        subcategory: formData.subcategory || null,
         location: scenario.location,
         type: scenario.type,
         scenario: scenarioId,
         order: maxOrder + 1,
         link: formData.link || null,
+        image_url: imageUrl,
         notes: formData.notes || null,
+        transport_type: formData.transportType,
         done: false,
       });
 
@@ -126,9 +263,7 @@ export default function AddTaskModal({
               </label>
               <select
                 value={formData.category}
-                onChange={(e) =>
-                  setFormData({ ...formData, category: e.target.value })
-                }
+                onChange={(e) => handleCategoryChange(e.target.value)}
                 className="input"
               >
                 {CATEGORIES.map((cat) => (
@@ -137,6 +272,50 @@ export default function AddTaskModal({
                   </option>
                 ))}
               </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Unterkategorie
+              </label>
+              <select
+                value={formData.subcategory}
+                onChange={(e) =>
+                  setFormData({ ...formData, subcategory: e.target.value })
+                }
+                className="input"
+              >
+                {(SUBCATEGORIES[formData.category] || ['Allgemein']).map(
+                  (subcat) => (
+                    <option key={subcat} value={subcat}>
+                      {subcat}
+                    </option>
+                  )
+                )}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Transportmittel
+              </label>
+              <select
+                value={formData.transportType}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    transportType: e.target.value as TransportType,
+                  })
+                }
+                className="input"
+              >
+                <option value="Nicht zutreffend">Nicht zutreffend</option>
+                <option value="Auto">Auto</option>
+                <option value="Flugzeug">Flugzeug</option>
+              </select>
+              <p className="text-xs text-gray-500 mt-1">
+                Nur relevant für Reise-Szenarien
+              </p>
             </div>
 
             <div>
@@ -171,6 +350,40 @@ export default function AddTaskModal({
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
+                Foto hinzufügen (optional)
+              </label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                className="input"
+              />
+              {imagePreview && (
+                <div className="mt-2">
+                  <img
+                    src={imagePreview}
+                    alt="Vorschau"
+                    className="w-full max-w-xs rounded-lg border"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setImageFile(null);
+                      setImagePreview(null);
+                    }}
+                    className="text-red-600 text-sm mt-1 hover:underline"
+                  >
+                    Bild entfernen
+                  </button>
+                </div>
+              )}
+              <p className="text-xs text-gray-500 mt-1">
+                Max. 5MB, Formate: JPG, PNG, GIF, WebP
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
                 Notizen (optional)
               </label>
               <textarea
@@ -187,10 +400,14 @@ export default function AddTaskModal({
             <div className="flex gap-2 pt-4 border-t">
               <button
                 type="submit"
-                disabled={saving || !formData.title}
+                disabled={saving || uploading || !formData.title}
                 className="btn-primary flex-1"
               >
-                {saving ? 'Speichern...' : 'Aufgabe hinzufügen'}
+                {uploading
+                  ? 'Bild wird hochgeladen...'
+                  : saving
+                  ? 'Speichern...'
+                  : 'Aufgabe hinzufügen'}
               </button>
               <button
                 type="button"
