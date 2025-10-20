@@ -105,9 +105,11 @@ export default function ChecklistPage() {
     // Update in Supabase if online
     if (online) {
       try {
-        const { error } = await supabase
-          .from('tasks')
-          .update({ done: updatedTask.done, updated_at: updatedTask.updated_at })
+        const { error } = await (supabase.from('tasks') as any)
+          .update({
+            done: updatedTask.done,
+            updated_at: updatedTask.updated_at
+          })
           .eq('id', taskId);
         
         if (error) throw error;
@@ -124,9 +126,10 @@ export default function ChecklistPage() {
 
     try {
       if (online) {
-        const { error } = await supabase
-          .from('tasks')
-          .update({ done: false })
+        const { error } = await (supabase.from('tasks') as any)
+          .update({
+            done: false
+          })
           .eq('scenario', scenarioId);
         
         if (error) throw error;

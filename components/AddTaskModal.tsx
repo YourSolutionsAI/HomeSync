@@ -175,8 +175,7 @@ export default function AddTaskModal({
       }
 
       // Get the max order for this scenario
-      const { data: existingTasks } = await supabase
-        .from('tasks')
+      const { data: existingTasks } = await (supabase.from('tasks') as any)
         .select('order')
         .eq('scenario', scenarioId)
         .order('order', { ascending: false })
@@ -184,7 +183,7 @@ export default function AddTaskModal({
 
       const maxOrder = existingTasks?.[0]?.order || 0;
 
-      const { error } = await supabase.from('tasks').insert({
+      const { error } = await (supabase.from('tasks') as any).insert({
         title: formData.title,
         description: formData.description || null,
         category: formData.category,

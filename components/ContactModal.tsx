@@ -37,7 +37,7 @@ export default function ContactModal({
     setSaving(true);
     try {
       if (isNew) {
-        const { error } = await supabase.from('contacts').insert({
+        const { error } = await (supabase.from('contacts') as any).insert({
           name: formData.name,
           role: formData.role,
           location: formData.location,
@@ -49,8 +49,7 @@ export default function ContactModal({
 
         if (error) throw error;
       } else {
-        const { error } = await supabase
-          .from('contacts')
+        const { error } = await (supabase.from('contacts') as any)
           .update({
             name: formData.name,
             role: formData.role,
@@ -81,8 +80,7 @@ export default function ContactModal({
     }
 
     try {
-      const { error } = await supabase
-        .from('contacts')
+      const { error } = await (supabase.from('contacts') as any)
         .delete()
         .eq('id', contact!.id);
 

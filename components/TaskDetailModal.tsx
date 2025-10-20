@@ -27,8 +27,7 @@ export default function TaskDetailModal({
   const handleSave = async () => {
     setSaving(true);
     try {
-      const { error } = await supabase
-        .from('tasks')
+      const { error } = await (supabase.from('tasks') as any)
         .update({
           title: formData.title,
           description: formData.description || null,
@@ -57,7 +56,7 @@ export default function TaskDetailModal({
     }
 
     try {
-      const { error } = await supabase.from('tasks').delete().eq('id', task.id);
+      const { error } = await (supabase.from('tasks') as any).delete().eq('id', task.id);
 
       if (error) throw error;
 
