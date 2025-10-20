@@ -23,6 +23,7 @@ export interface Database {
           order: number
           link: string | null
           image_url: string | null
+          image_urls: string[] | null
           notes: string | null
           transport_type: 'Auto' | 'Flugzeug' | 'Nicht zutreffend' | null
           created_at: string
@@ -41,6 +42,7 @@ export interface Database {
           order: number
           link?: string | null
           image_url?: string | null
+          image_urls?: string[] | null
           notes?: string | null
           transport_type?: 'Auto' | 'Flugzeug' | 'Nicht zutreffend' | null
           created_at?: string
@@ -59,6 +61,7 @@ export interface Database {
           order?: number
           link?: string | null
           image_url?: string | null
+          image_urls?: string[] | null
           notes?: string | null
           transport_type?: 'Auto' | 'Flugzeug' | 'Nicht zutreffend' | null
           created_at?: string

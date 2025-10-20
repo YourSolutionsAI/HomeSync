@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Task } from '@/lib/types';
 import { supabase } from '@/lib/supabase';
+import ConfirmModal from './ConfirmModal';
 
 interface TaskDetailModalProps {
   task: Task;
@@ -138,6 +139,18 @@ export default function TaskDetailModal({
       : getSubcategoriesReise(category, task.location);
   };
 
+  // Lade vorhandene Bilder aus image_urls oder migriere von image_url
+  const [existingImages, setExistingImages] = useState<string[]>([]);
+  
+  useEffect(() => {
+    // Bevorzuge image_urls, falle aber auf image_url zurück für Kompatibilität
+    if ((task as any).image_urls && (task as any).image_urls.length > 0) {
+      setExistingImages((task as any).image_urls);
+    } else if (task.image_url) {
+      setExistingImages([task.image_url]);
+    }
+  }, [task]);
+
   const [editing, setEditing] = useState(false);
   const [formData, setFormData] = useState({
     title: task.title,
@@ -147,10 +160,19 @@ export default function TaskDetailModal({
     link: task.link || '',
     notes: task.notes || '',
   });
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  
+  // State für mehrere neue Bilder
+  const [newImageFiles, setNewImageFiles] = useState<File[]>([]);
+  const [newImagePreviews, setNewImagePreviews] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
+  
+  // State für Bild-Lösch-Bestätigung
+  const [showDeleteImageModal, setShowDeleteImageModal] = useState(false);
+  const [imageToDelete, setImageToDelete] = useState<string | null>(null);
+  
+  // State für Aufgaben-Lösch-Bestätigung
+  const [showDeleteTaskModal, setShowDeleteTaskModal] = useState(false);
 
   const handleCategoryChange = (newCategory: string) => {
     const subcategories = getSubcategories(newCategory);
@@ -162,42 +184,82 @@ export default function TaskDetailModal({
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        alert('Datei ist zu groß! Maximale Größe: 5MB');
-        return;
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    // Kein Größenlimit mehr oder sehr hoch (20MB)
+    const maxSize = 20 * 1024 * 1024; // 20MB
+    const validFiles = files.filter(file => {
+      if (file.size > maxSize) {
+        alert(`Datei "${file.name}" ist zu groß! Maximale Größe: 20MB`);
+        return false;
       }
       if (!file.type.startsWith('image/')) {
-        alert('Bitte wählen Sie eine Bilddatei aus!');
-        return;
+        alert(`"${file.name}" ist keine Bilddatei!`);
+        return false;
       }
-      setImageFile(file);
+      return true;
+    });
+
+    if (validFiles.length === 0) return;
+
+    // Füge neue Dateien hinzu
+    setNewImageFiles([...newImageFiles, ...validFiles]);
+
+    // Erstelle Vorschauen
+    validFiles.forEach(file => {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setImagePreview(reader.result as string);
+        setNewImagePreviews(prev => [...prev, reader.result as string]);
       };
       reader.readAsDataURL(file);
+    });
+  };
+
+  const removeNewImage = (index: number) => {
+    setNewImageFiles(prev => prev.filter((_, i) => i !== index));
+    setNewImagePreviews(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const removeExistingImage = (imageUrl: string) => {
+    setImageToDelete(imageUrl);
+    setShowDeleteImageModal(true);
+  };
+
+  const confirmDeleteImage = () => {
+    if (imageToDelete) {
+      setExistingImages(prev => prev.filter(url => url !== imageToDelete));
+      setImageToDelete(null);
     }
   };
 
-  const uploadImage = async (): Promise<string | null> => {
-    if (!imageFile) return null;
+  const uploadImages = async (): Promise<string[]> => {
+    if (newImageFiles.length === 0) return [];
+    
     setUploading(true);
+    const uploadedUrls: string[] = [];
+
     try {
-      const fileExt = imageFile.name.split('.').pop();
-      const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
-      const filePath = fileName; // Kein "task-images/" Präfix, da der Bucket bereits "task-images" heißt
-      const { error: uploadError } = await supabase.storage
-        .from('task-images')
-        .upload(filePath, imageFile);
-      if (uploadError) throw uploadError;
-      const { data } = supabase.storage.from('task-images').getPublicUrl(filePath);
-      return data.publicUrl;
+      for (const file of newImageFiles) {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
+        const filePath = fileName;
+
+        const { error: uploadError } = await supabase.storage
+          .from('task-images')
+          .upload(filePath, file);
+
+        if (uploadError) throw uploadError;
+
+        const { data } = supabase.storage.from('task-images').getPublicUrl(filePath);
+        uploadedUrls.push(data.publicUrl);
+      }
+
+      return uploadedUrls;
     } catch (error) {
-      console.error('Fehler beim Hochladen des Bildes:', error);
-      alert('Fehler beim Hochladen des Bildes');
-      return null;
+      console.error('Fehler beim Hochladen der Bilder:', error);
+      alert('Fehler beim Hochladen eines oder mehrerer Bilder');
+      return [];
     } finally {
       setUploading(false);
     }
@@ -206,16 +268,11 @@ export default function TaskDetailModal({
   const handleSave = async () => {
     setSaving(true);
     try {
-      // Upload new image if exists
-      let imageUrl: string | null = task.image_url || null;
-      if (imageFile) {
-        const newUrl = await uploadImage();
-        if (newUrl) imageUrl = newUrl;
-        else if (imageFile) {
-          setSaving(false);
-          return;
-        }
-      }
+      // Upload neue Bilder
+      const newUploadedUrls = await uploadImages();
+      
+      // Kombiniere vorhandene und neue Bilder
+      const allImageUrls = [...existingImages, ...newUploadedUrls];
 
       const { error } = await (supabase.from('tasks') as any)
         .update({
@@ -224,7 +281,8 @@ export default function TaskDetailModal({
           category: formData.category,
           subcategory: formData.subcategory || null,
           link: formData.link || null,
-          image_url: imageUrl,
+          image_url: allImageUrls.length > 0 ? allImageUrls[0] : null, // Erstes Bild für Kompatibilität
+          image_urls: allImageUrls.length > 0 ? allImageUrls : null, // Alle Bilder als Array
           notes: formData.notes || null,
           updated_at: new Date().toISOString(),
         })
@@ -232,6 +290,10 @@ export default function TaskDetailModal({
 
       if (error) throw error;
 
+      // Reset neue Bilder
+      setNewImageFiles([]);
+      setNewImagePreviews([]);
+      
       setEditing(false);
       onUpdate();
       onClose();
@@ -243,11 +305,11 @@ export default function TaskDetailModal({
     }
   };
 
-  const handleDelete = async () => {
-    if (!confirm('Möchten Sie diese Aufgabe wirklich löschen?')) {
-      return;
-    }
+  const handleDeleteClick = () => {
+    setShowDeleteTaskModal(true);
+  };
 
+  const confirmDeleteTask = async () => {
     try {
       const { error } = await (supabase.from('tasks') as any).delete().eq('id', task.id);
 
@@ -362,39 +424,79 @@ export default function TaskDetailModal({
                 />
               </div>
 
+              {/* Vorhandene Bilder */}
+              {existingImages.length > 0 && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Vorhandene Fotos ({existingImages.length})
+                  </label>
+                  <div className="grid grid-cols-2 gap-3">
+                    {existingImages.map((imageUrl, index) => (
+                      <div key={index} className="relative group">
+                        <img
+                          src={imageUrl}
+                          alt={`Bild ${index + 1}`}
+                          className="w-full h-32 object-cover rounded-lg border border-gray-200"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeExistingImage(imageUrl)}
+                          className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-7 h-7 flex items-center justify-center hover:bg-red-700 opacity-0 group-hover:opacity-100 transition-opacity"
+                          title="Bild löschen"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Neue Bilder Vorschau */}
+              {newImagePreviews.length > 0 && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Neue Fotos ({newImagePreviews.length})
+                  </label>
+                  <div className="grid grid-cols-2 gap-3">
+                    {newImagePreviews.map((preview, index) => (
+                      <div key={index} className="relative group">
+                        <img
+                          src={preview}
+                          alt={`Vorschau ${index + 1}`}
+                          className="w-full h-32 object-cover rounded-lg border border-blue-300"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeNewImage(index)}
+                          className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-7 h-7 flex items-center justify-center hover:bg-red-700 opacity-0 group-hover:opacity-100 transition-opacity"
+                          title="Bild entfernen"
+                        >
+                          ×
+                        </button>
+                        <span className="absolute bottom-1 left-1 bg-blue-600 text-white text-xs px-2 py-0.5 rounded">
+                          Neu
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Foto hinzufügen */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Foto {task.image_url ? 'ändern' : 'hinzufügen'}
+                  Fotos hinzufügen (mehrere möglich)
                 </label>
                 <input
                   type="file"
                   accept="image/*"
+                  multiple
                   onChange={handleImageChange}
                   className="input"
                 />
-                {(imagePreview || task.image_url) && (
-                  <div className="mt-2">
-                    <img
-                      src={imagePreview || task.image_url!}
-                      alt="Vorschau"
-                      className="w-full max-w-xs rounded-lg border"
-                    />
-                    {imagePreview && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setImageFile(null);
-                          setImagePreview(null);
-                        }}
-                        className="text-red-600 text-sm mt-1 hover:underline"
-                      >
-                        Neues Bild entfernen
-                      </button>
-                    )}
-                  </div>
-                )}
                 <p className="text-xs text-gray-500 mt-1">
-                  Max. 5MB, Formate: JPG, PNG, GIF, WebP
+                  Max. 20MB pro Bild, Formate: JPG, PNG, GIF, WebP. Sie können mehrere Dateien gleichzeitig auswählen.
                 </p>
               </div>
 
@@ -419,13 +521,23 @@ export default function TaskDetailModal({
                   className="btn-primary flex-1"
                 >
                   {uploading
-                    ? 'Bild wird hochgeladen...'
+                    ? `Bilder werden hochgeladen... (${newImageFiles.length})`
                     : saving
                     ? 'Speichern...'
                     : 'Speichern'}
                 </button>
                 <button
-                  onClick={() => setEditing(false)}
+                  onClick={() => {
+                    setEditing(false);
+                    setNewImageFiles([]);
+                    setNewImagePreviews([]);
+                    // Reset existingImages zu ursprünglichem Zustand
+                    if ((task as any).image_urls && (task as any).image_urls.length > 0) {
+                      setExistingImages((task as any).image_urls);
+                    } else if (task.image_url) {
+                      setExistingImages([task.image_url]);
+                    }
+                  }}
                   className="btn-secondary flex-1"
                 >
                   Abbrechen
@@ -484,23 +596,31 @@ export default function TaskDetailModal({
                 </div>
               )}
 
-              {task.image_url && (
+              {/* Anzeige aller Bilder */}
+              {existingImages.length > 0 && (
                 <div>
-                  <h4 className="font-semibold text-gray-700 mb-1">Bild</h4>
-                  <div className="mt-2">
-                    <img
-                      src={task.image_url}
-                      alt={task.title}
-                      className="rounded-lg max-w-full h-auto border border-gray-200 shadow-sm"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.style.display = 'none';
-                        const errorDiv = document.createElement('div');
-                        errorDiv.className = 'p-4 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700';
-                        errorDiv.innerHTML = '⚠️ Bild konnte nicht geladen werden.<br/>URL: <span class="text-xs break-all">' + task.image_url + '</span>';
-                        target.parentElement?.appendChild(errorDiv);
-                      }}
-                    />
+                  <h4 className="font-semibold text-gray-700 mb-2">
+                    Fotos ({existingImages.length})
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {existingImages.map((imageUrl, index) => (
+                      <div key={index} className="mt-2">
+                        <img
+                          src={imageUrl}
+                          alt={`${task.title} - Bild ${index + 1}`}
+                          className="rounded-lg max-w-full h-auto border border-gray-200 shadow-sm cursor-pointer hover:shadow-lg transition-shadow"
+                          onClick={() => window.open(imageUrl, '_blank')}
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = 'none';
+                            const errorDiv = document.createElement('div');
+                            errorDiv.className = 'p-4 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700';
+                            errorDiv.innerHTML = '⚠️ Bild konnte nicht geladen werden.<br/>URL: <span class="text-xs break-all">' + imageUrl + '</span>';
+                            target.parentElement?.appendChild(errorDiv);
+                          }}
+                        />
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}
@@ -516,7 +636,7 @@ export default function TaskDetailModal({
                 <button onClick={() => setEditing(true)} className="btn-primary flex-1">
                   Bearbeiten
                 </button>
-                <button onClick={handleDelete} className="btn-danger flex-1">
+                <button onClick={handleDeleteClick} className="btn-danger flex-1">
                   Löschen
                 </button>
                 <button onClick={onClose} className="btn-secondary flex-1">
@@ -527,7 +647,33 @@ export default function TaskDetailModal({
           )}
         </div>
       </div>
+
+      {/* Confirm Modal für Bild löschen */}
+      <ConfirmModal
+        isOpen={showDeleteImageModal}
+        onClose={() => {
+          setShowDeleteImageModal(false);
+          setImageToDelete(null);
+        }}
+        onConfirm={confirmDeleteImage}
+        title="Bild löschen?"
+        message="Möchten Sie dieses Bild wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden."
+        confirmText="Ja, löschen"
+        cancelText="Abbrechen"
+        type="danger"
+      />
+
+      {/* Confirm Modal für Aufgabe löschen */}
+      <ConfirmModal
+        isOpen={showDeleteTaskModal}
+        onClose={() => setShowDeleteTaskModal(false)}
+        onConfirm={confirmDeleteTask}
+        title="Aufgabe löschen?"
+        message={`Möchten Sie die Aufgabe "${task.title}" wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.`}
+        confirmText="Ja, löschen"
+        cancelText="Abbrechen"
+        type="danger"
+      />
     </div>
   );
 }
-

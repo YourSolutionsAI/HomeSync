@@ -149,8 +149,9 @@ export default function AddTaskModal({
     link: '',
     notes: '',
   });
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  // State für mehrere Bilder
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -164,56 +165,70 @@ export default function AddTaskModal({
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      // Überprüfe Dateigröße (max 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        alert('Datei ist zu groß! Maximale Größe: 5MB');
-        return;
-      }
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
 
-      // Überprüfe Dateityp
+    // Kein Größenlimit mehr oder sehr hoch (20MB)
+    const maxSize = 20 * 1024 * 1024; // 20MB
+    const validFiles = files.filter(file => {
+      if (file.size > maxSize) {
+        alert(`Datei "${file.name}" ist zu groß! Maximale Größe: 20MB`);
+        return false;
+      }
       if (!file.type.startsWith('image/')) {
-        alert('Bitte wählen Sie eine Bilddatei aus!');
-        return;
+        alert(`"${file.name}" ist keine Bilddatei!`);
+        return false;
       }
+      return true;
+    });
 
-      setImageFile(file);
+    if (validFiles.length === 0) return;
 
-      // Erstelle Vorschau
+    // Füge neue Dateien hinzu
+    setImageFiles([...imageFiles, ...validFiles]);
+
+    // Erstelle Vorschauen
+    validFiles.forEach(file => {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setImagePreview(reader.result as string);
+        setImagePreviews(prev => [...prev, reader.result as string]);
       };
       reader.readAsDataURL(file);
-    }
+    });
   };
 
-  const uploadImage = async (): Promise<string | null> => {
-    if (!imageFile) return null;
+  const removeImage = (index: number) => {
+    setImageFiles(prev => prev.filter((_, i) => i !== index));
+    setImagePreviews(prev => prev.filter((_, i) => i !== index));
+  };
 
+  const uploadImages = async (): Promise<string[]> => {
+    if (imageFiles.length === 0) return [];
+    
     setUploading(true);
+    const uploadedUrls: string[] = [];
+
     try {
-      const fileExt = imageFile.name.split('.').pop();
-      const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
-      const filePath = fileName; // Kein "task-images/" Präfix, da der Bucket bereits "task-images" heißt
+      for (const file of imageFiles) {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
+        const filePath = fileName;
 
-      const { error: uploadError } = await supabase.storage
-        .from('task-images')
-        .upload(filePath, imageFile);
+        const { error: uploadError } = await supabase.storage
+          .from('task-images')
+          .upload(filePath, file);
 
-      if (uploadError) throw uploadError;
+        if (uploadError) throw uploadError;
 
-      // Hole die öffentliche URL
-      const { data } = supabase.storage
-        .from('task-images')
-        .getPublicUrl(filePath);
+        const { data } = supabase.storage.from('task-images').getPublicUrl(filePath);
+        uploadedUrls.push(data.publicUrl);
+      }
 
-      return data.publicUrl;
+      return uploadedUrls;
     } catch (error) {
-      console.error('Fehler beim Hochladen des Bildes:', error);
-      alert('Fehler beim Hochladen des Bildes');
-      return null;
+      console.error('Fehler beim Hochladen der Bilder:', error);
+      alert('Fehler beim Hochladen eines oder mehrerer Bilder');
+      return [];
     } finally {
       setUploading(false);
     }
@@ -225,16 +240,8 @@ export default function AddTaskModal({
 
     setSaving(true);
     try {
-      // Upload image if exists
-      let imageUrl: string | null = null;
-      if (imageFile) {
-        imageUrl = await uploadImage();
-        if (!imageUrl && imageFile) {
-          // Upload failed but user had selected an image
-          setSaving(false);
-          return;
-        }
-      }
+      // Upload images if exist
+      const uploadedUrls = await uploadImages();
 
       // Get the max order for this scenario
       const { data: existingTasks } = await (supabase.from('tasks') as any)
@@ -255,7 +262,8 @@ export default function AddTaskModal({
         scenario: scenarioId,
         order: maxOrder + 1,
         link: formData.link || null,
-        image_url: imageUrl,
+        image_url: uploadedUrls.length > 0 ? uploadedUrls[0] : null, // Erstes Bild für Kompatibilität
+        image_urls: uploadedUrls.length > 0 ? uploadedUrls : null, // Alle Bilder als Array
         notes: formData.notes || null,
         transport_type: null, // Wird auf Checklisten-Ebene gesetzt
         done: false,
@@ -390,37 +398,48 @@ export default function AddTaskModal({
               />
             </div>
 
+            {/* Bilder Vorschau */}
+            {imagePreviews.length > 0 && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Ausgewählte Fotos ({imagePreviews.length})
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  {imagePreviews.map((preview, index) => (
+                    <div key={index} className="relative group">
+                      <img
+                        src={preview}
+                        alt={`Vorschau ${index + 1}`}
+                        className="w-full h-32 object-cover rounded-lg border border-gray-200"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeImage(index)}
+                        className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-7 h-7 flex items-center justify-center hover:bg-red-700 opacity-0 group-hover:opacity-100 transition-opacity"
+                        title="Bild entfernen"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Fotos hinzufügen */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Foto hinzufügen (optional)
+                Fotos hinzufügen (optional, mehrere möglich)
               </label>
               <input
                 type="file"
                 accept="image/*"
+                multiple
                 onChange={handleImageChange}
                 className="input"
               />
-              {imagePreview && (
-                <div className="mt-2">
-                  <img
-                    src={imagePreview}
-                    alt="Vorschau"
-                    className="w-full max-w-xs rounded-lg border"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setImageFile(null);
-                      setImagePreview(null);
-                    }}
-                    className="text-red-600 text-sm mt-1 hover:underline"
-                  >
-                    Bild entfernen
-                  </button>
-                </div>
-              )}
               <p className="text-xs text-gray-500 mt-1">
-                Max. 5MB, Formate: JPG, PNG, GIF, WebP
+                Max. 20MB pro Bild, Formate: JPG, PNG, GIF, WebP. Sie können mehrere Dateien gleichzeitig auswählen.
               </p>
             </div>
 
@@ -446,7 +465,7 @@ export default function AddTaskModal({
                 className="btn-primary flex-1"
               >
                 {uploading
-                  ? 'Bild wird hochgeladen...'
+                  ? `Bilder werden hochgeladen... (${imageFiles.length})`
                   : saving
                   ? 'Speichern...'
                   : 'Aufgabe hinzufügen'}
