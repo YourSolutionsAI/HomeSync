@@ -286,6 +286,17 @@ export default function TaskDetailModal({
     }
   };
 
+  const normalizeUrl = (url: string): string => {
+    if (!url || url.trim() === '') return '';
+    const trimmedUrl = url.trim();
+    // Prüfe ob URL bereits mit http:// oder https:// beginnt
+    if (trimmedUrl.match(/^https?:\/\//i)) {
+      return trimmedUrl;
+    }
+    // Füge https:// hinzu
+    return `https://${trimmedUrl}`;
+  };
+
   const handleSave = async () => {
     setSaving(true);
     try {
@@ -295,13 +306,16 @@ export default function TaskDetailModal({
       // Kombiniere vorhandene und neue Bilder
       const allImageUrls = [...existingImages, ...newUploadedUrls];
 
+      // Normalisiere den Link
+      const normalizedLink = formData.link ? normalizeUrl(formData.link) : null;
+
       const { error } = await (supabase.from('tasks') as any)
         .update({
           title: formData.title,
           description: formData.description || null,
           category: formData.category,
           subcategory: formData.subcategory || null,
-          link: formData.link || null,
+          link: normalizedLink,
           image_url: allImageUrls.length > 0 ? allImageUrls[0] : null, // Erstes Bild für Kompatibilität
           image_urls: allImageUrls.length > 0 ? allImageUrls : null, // Alle Bilder als Array
           notes: formData.notes || null,
@@ -459,8 +473,11 @@ export default function TaskDetailModal({
                     setFormData({ ...formData, link: e.target.value })
                   }
                   className="input"
-                  placeholder="https://..."
+                  placeholder="beispiel.de oder https://beispiel.de"
                 />
+                <p className="text-xs text-gray-500 mt-1">
+                  💡 Tipp: https:// wird automatisch hinzugefügt
+                </p>
               </div>
 
               {/* Vorhandene Bilder */}

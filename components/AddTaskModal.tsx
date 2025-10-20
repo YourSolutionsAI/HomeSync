@@ -234,6 +234,17 @@ export default function AddTaskModal({
     }
   };
 
+  const normalizeUrl = (url: string): string => {
+    if (!url || url.trim() === '') return '';
+    const trimmedUrl = url.trim();
+    // Prüfe ob URL bereits mit http:// oder https:// beginnt
+    if (trimmedUrl.match(/^https?:\/\//i)) {
+      return trimmedUrl;
+    }
+    // Füge https:// hinzu
+    return `https://${trimmedUrl}`;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.title || !scenario) return;
@@ -252,6 +263,9 @@ export default function AddTaskModal({
 
       const maxOrder = existingTasks?.[0]?.order || 0;
 
+      // Normalisiere den Link
+      const normalizedLink = formData.link ? normalizeUrl(formData.link) : null;
+
       const { error } = await (supabase.from('tasks') as any).insert({
         title: formData.title,
         description: formData.description || null,
@@ -261,7 +275,7 @@ export default function AddTaskModal({
         type: scenario.type,
         scenario: scenarioId,
         order: maxOrder + 1,
-        link: formData.link || null,
+        link: normalizedLink,
         image_url: uploadedUrls.length > 0 ? uploadedUrls[0] : null, // Erstes Bild für Kompatibilität
         image_urls: uploadedUrls.length > 0 ? uploadedUrls : null, // Alle Bilder als Array
         notes: formData.notes || null,
@@ -394,8 +408,11 @@ export default function AddTaskModal({
                   setFormData({ ...formData, link: e.target.value })
                 }
                 className="input"
-                placeholder="https://..."
+                placeholder="beispiel.de oder https://beispiel.de"
               />
+              <p className="text-xs text-gray-500 mt-1">
+                💡 Tipp: https:// wird automatisch hinzugefügt
+              </p>
             </div>
 
             {/* Bilder Vorschau */}
