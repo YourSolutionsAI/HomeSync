@@ -30,6 +30,7 @@ export default function ChecklistPage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [online, setOnline] = useState(true);
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
+  const [expandedSubcategories, setExpandedSubcategories] = useState<Record<string, boolean>>({});
   const [showAllCompleted, setShowAllCompleted] = useState(false);
 
   useEffect(() => {
@@ -162,10 +163,17 @@ export default function ChecklistPage() {
     }
   };
 
-  const toggleCategoryCompleted = (categoryKey: string) => {
+  const toggleCategory = (categoryKey: string) => {
     setExpandedCategories(prev => ({
       ...prev,
       [categoryKey]: !prev[categoryKey]
+    }));
+  };
+
+  const toggleSubcategory = (subcategoryKey: string) => {
+    setExpandedSubcategories(prev => ({
+      ...prev,
+      [subcategoryKey]: !prev[subcategoryKey]
     }));
   };
 
@@ -434,13 +442,20 @@ export default function ChecklistPage() {
               const categoryCompletedCount = allCategoryTasks.filter(t => t.done).length;
               const categoryTotalCount = allCategoryTasks.length;
               const categoryKey = category;
-              const isCategoryExpanded = showAllCompleted || expandedCategories[categoryKey];
+              const allCategoryTasksCompleted = categoryCompletedCount === categoryTotalCount && categoryTotalCount > 0;
+              const isCategoryExpanded = showAllCompleted || expandedCategories[categoryKey] || !allCategoryTasksCompleted;
               
               return (
               <div key={category} className="mb-8 last:mb-0">
-                {/* Kategorie-Überschrift */}
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-bold text-gray-800 pb-2 border-b-2 border-blue-500 bg-gradient-to-r from-blue-50 to-transparent px-3 py-2 rounded-t flex-1">
+                {/* Kategorie-Überschrift - klickbar wenn alle erledigt */}
+                <div 
+                  className={`flex items-center justify-between mb-4 ${allCategoryTasksCompleted ? 'cursor-pointer hover:bg-gray-50 rounded-lg transition-colors' : ''}`}
+                  onClick={allCategoryTasksCompleted ? () => toggleCategory(categoryKey) : undefined}
+                >
+                  <h3 className="text-lg font-bold text-gray-800 pb-2 border-b-2 border-blue-500 bg-gradient-to-r from-blue-50 to-transparent px-3 py-2 rounded-t flex-1 flex items-center gap-2">
+                    {allCategoryTasksCompleted && (
+                      <span className="text-sm">{isCategoryExpanded ? '▼' : '▶'}</span>
+                    )}
                     {category}
                   </h3>
                   {categoryCompletedCount > 0 && (
@@ -450,65 +465,60 @@ export default function ChecklistPage() {
                   )}
                 </div>
                 
-                {/* Unterkategorien */}
-                <div className="space-y-4">
-                  {subcategories.map((subcategory) => {
-                    const subcategoryTasks = categorySubcategories[subcategory];
-                    const showSubcategoryHeader = hasMultipleSubcategories && subcategory !== 'Allgemein';
-                    
-                    // Teile Tasks in offen und erledigt
-                    const openTasks = subcategoryTasks.filter(t => !t.done);
-                    const completedTasks = subcategoryTasks.filter(t => t.done);
-                    
-                    return (
-                      <div key={`${category}-${subcategory}`} className={showSubcategoryHeader ? 'ml-4' : ''}>
-                        {/* Unterkategorie-Überschrift (nur wenn mehrere Unterkategorien) */}
-                        {showSubcategoryHeader && (
-                          <h4 className="text-sm font-semibold text-gray-600 mb-2 pl-3 border-l-4 border-gray-300 bg-gray-50 py-1.5 rounded">
-                            📌 {subcategory}
-                            {completedTasks.length > 0 && (
-                              <span className="text-xs text-gray-400 ml-2">
-                                ({completedTasks.length}/{subcategoryTasks.length} ✓)
-                              </span>
-                            )}
-                          </h4>
-                        )}
-                        
-                        {/* Offene Tasks der Unterkategorie */}
-                        <div className={`space-y-2 ${showSubcategoryHeader ? 'ml-4' : ''}`}>
-                          {openTasks.map((task) => (
-                            <TaskItem
-                              key={task.id}
-                              task={task}
-                              onToggle={toggleTask}
-                              onDetail={() => setSelectedTask(task)}
-                            />
-                          ))}
-                        </div>
-                        
-                        {/* Erledigte Tasks - eingeklappt mit Toggle */}
-                        {completedTasks.length > 0 && (
-                          <div className={`mt-2 ${showSubcategoryHeader ? 'ml-4' : ''}`}>
-                            {!isCategoryExpanded ? (
-                              <button
-                                onClick={() => toggleCategoryCompleted(categoryKey)}
-                                className="text-sm text-gray-500 hover:text-gray-700 flex items-center gap-2 py-2 px-3 rounded hover:bg-gray-50 transition-colors"
-                              >
-                                <span className="text-green-600">✓</span>
-                                {completedTasks.length} {completedTasks.length === 1 ? 'Aufgabe' : 'Aufgaben'} erledigt
-                                <span className="text-xs">▼</span>
-                              </button>
-                            ) : (
-                              <div>
-                                <button
-                                  onClick={() => toggleCategoryCompleted(categoryKey)}
-                                  className="text-sm text-gray-500 hover:text-gray-700 flex items-center gap-2 py-2 px-3 rounded hover:bg-gray-50 transition-colors mb-2"
-                                >
-                                  <span className="text-green-600">✓</span>
-                                  {completedTasks.length} {completedTasks.length === 1 ? 'Aufgabe' : 'Aufgaben'} erledigt
-                                  <span className="text-xs">▲</span>
-                                </button>
-                                <div className="space-y-2 opacity-60">
+                {/* Unterkategorien - nur anzeigen wenn Kategorie expanded */}
+                {isCategoryExpanded && (
+                  <div className="space-y-4">
+                    {subcategories.map((subcategory) => {
+                      const subcategoryTasks = categorySubcategories[subcategory];
+                      const showSubcategoryHeader = hasMultipleSubcategories && subcategory !== 'Allgemein';
+                      
+                      // Teile Tasks in offen und erledigt
+                      const openTasks = subcategoryTasks.filter(t => !t.done);
+                      const completedTasks = subcategoryTasks.filter(t => t.done);
+                      const allSubcategoryTasksCompleted = openTasks.length === 0 && completedTasks.length > 0;
+                      const subcategoryKey = `${category}-${subcategory}`;
+                      const isSubcategoryExpanded = showAllCompleted || expandedSubcategories[subcategoryKey] || !allSubcategoryTasksCompleted;
+                      
+                      return (
+                        <div key={subcategoryKey} className={showSubcategoryHeader ? 'ml-4' : ''}>
+                          {/* Unterkategorie-Überschrift - klickbar wenn alle erledigt */}
+                          {showSubcategoryHeader && (
+                            <h4 
+                              className={`text-sm font-semibold text-gray-600 mb-2 pl-3 border-l-4 border-gray-300 bg-gray-50 py-1.5 rounded flex items-center gap-2 ${allSubcategoryTasksCompleted ? 'cursor-pointer hover:bg-gray-100 transition-colors' : ''}`}
+                              onClick={allSubcategoryTasksCompleted ? () => toggleSubcategory(subcategoryKey) : undefined}
+                            >
+                              {allSubcategoryTasksCompleted && (
+                                <span className="text-xs">{isSubcategoryExpanded ? '▼' : '▶'}</span>
+                              )}
+                              <span>📌 {subcategory}</span>
+                              {completedTasks.length > 0 && (
+                                <span className="text-xs text-gray-400 ml-auto">
+                                  ({completedTasks.length}/{subcategoryTasks.length} ✓)
+                                </span>
+                              )}
+                            </h4>
+                          )}
+                          
+                          {/* Tasks der Unterkategorie - nur anzeigen wenn expanded */}
+                          {isSubcategoryExpanded && (
+                            <>
+                              {/* Offene Tasks */}
+                              {openTasks.length > 0 && (
+                                <div className={`space-y-2 ${showSubcategoryHeader ? 'ml-4' : ''}`}>
+                                  {openTasks.map((task) => (
+                                    <TaskItem
+                                      key={task.id}
+                                      task={task}
+                                      onToggle={toggleTask}
+                                      onDetail={() => setSelectedTask(task)}
+                                    />
+                                  ))}
+                                </div>
+                              )}
+                              
+                              {/* Erledigte Tasks */}
+                              {completedTasks.length > 0 && (
+                                <div className={`space-y-2 ${showSubcategoryHeader ? 'ml-4' : ''} ${openTasks.length > 0 ? 'mt-2' : ''} opacity-60`}>
                                   {completedTasks.map((task) => (
                                     <TaskItem
                                       key={task.id}
@@ -518,14 +528,14 @@ export default function ChecklistPage() {
                                     />
                                   ))}
                                 </div>
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
+                              )}
+                            </>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             );
             })}
