@@ -196,7 +196,7 @@ export default function AddTaskModal({
     try {
       const fileExt = imageFile.name.split('.').pop();
       const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
-      const filePath = `task-images/${fileName}`;
+      const filePath = fileName; // Kein "task-images/" Präfix, da der Bucket bereits "task-images" heißt
 
       const { error: uploadError } = await supabase.storage
         .from('task-images')
