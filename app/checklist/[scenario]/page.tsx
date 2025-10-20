@@ -192,14 +192,44 @@ export default function ChecklistPage() {
 
   const CATEGORY_ORDER = isVorOrt ? CATEGORY_ORDER_VOR_ORT : CATEGORY_ORDER_REISE;
 
-  // Group tasks by category
+  // Unterkategorie-Reihenfolge für bessere Sortierung
+  const SUBCATEGORY_ORDER_REISE: Record<string, string[]> = {
+    'Vorbereitung Abreisehaus': [
+      'Schlafzimmer', 'Büro', 'Gäste Apartment', 'Küche', 'Hauswirtschaftsraum',
+      'Garage', 'Wohnzimmer', 'Badezimmer', 'Außenbereich', 'Allgemein'
+    ],
+    'Am Abreisetag': ['Schlafzimmer', 'Küche', 'Garage', 'Außenbereich', 'Allgemein'],
+    'Hausverwaltung': ['Elektronik', 'Heizung/Klima', 'Wasser', 'Gas', 'Außenbereich', 'Pool', 'Allgemein'],
+    'Haus verschließen': [
+      'Fenster und Türen', 'Schlafzimmer', 'Büro', 'Gäste Apartment',
+      'Garage', 'Hauswirtschaftsraum', 'Wohnzimmer', 'Schlüssel', 'Allgemein'
+    ],
+  };
+
+  const SUBCATEGORY_ORDER_VOR_ORT: Record<string, string[]> = {
+    'Regelmäßige Wartung': ['Wöchentlich', 'Monatlich', 'Saisonal', 'Heizung/Klima', 'Elektronik', 'Wasser', 'Allgemein'],
+    'Pool & Garten': ['Pool Pflege', 'Poolchemie', 'Rasen', 'Pflanzen', 'Bewässerung', 'Terrasse', 'Allgemein'],
+    'Haustechnik': ['Heizung/Klima', 'Elektrik', 'Wasser/Sanitär', 'Gas', 'Alarmanlage', 'Rollläden', 'Allgemein'],
+    'Reinigung & Ordnung': ['Schlafzimmer', 'Küche', 'Bad', 'Wohnzimmer', 'Garage', 'Außenbereich', 'Fenster', 'Allgemein'],
+    'Einkaufen & Besorgungen': ['Lebensmittel', 'Haushalt', 'Poolbedarf', 'Garten', 'Werkzeug', 'Allgemein'],
+    'Reparaturen': ['Dringend', 'Geplant', 'Kleinreparaturen', 'Allgemein'],
+    'Sicherheit': ['Alarmanlage', 'Schlüssel', 'Beleuchtung', 'Allgemein'],
+  };
+
+  const SUBCATEGORY_ORDER = isVorOrt ? SUBCATEGORY_ORDER_VOR_ORT : SUBCATEGORY_ORDER_REISE;
+
+  // Group tasks by category and subcategory
   const groupedTasks = tasks.reduce((acc, task) => {
     if (!acc[task.category]) {
-      acc[task.category] = [];
+      acc[task.category] = {};
     }
-    acc[task.category].push(task);
+    const subcategory = task.subcategory || 'Allgemein';
+    if (!acc[task.category][subcategory]) {
+      acc[task.category][subcategory] = [];
+    }
+    acc[task.category][subcategory].push(task);
     return acc;
-  }, {} as Record<string, Task[]>);
+  }, {} as Record<string, Record<string, Task[]>>);
 
   // Sort categories according to CATEGORY_ORDER
   const sortedCategories = Object.keys(groupedTasks).sort((a, b) => {
@@ -210,6 +240,20 @@ export default function ChecklistPage() {
     if (indexB === -1) return -1;
     return indexA - indexB;
   });
+
+  // Helper function to sort subcategories
+  const getSortedSubcategories = (category: string, subcategories: string[]) => {
+    const order = SUBCATEGORY_ORDER[category];
+    if (!order) return subcategories.sort();
+    
+    return subcategories.sort((a, b) => {
+      const indexA = order.indexOf(a);
+      const indexB = order.indexOf(b);
+      if (indexA === -1) return 1;
+      if (indexB === -1) return -1;
+      return indexA - indexB;
+    });
+  };
 
   if (loading) {
     return (
@@ -313,21 +357,46 @@ export default function ChecklistPage() {
             </div>
 
             {sortedCategories.map((category) => {
-              const categoryTasks = groupedTasks[category];
+              const categorySubcategories = groupedTasks[category];
+              const subcategories = getSortedSubcategories(category, Object.keys(categorySubcategories));
+              const hasMultipleSubcategories = subcategories.length > 1 || (subcategories.length === 1 && subcategories[0] !== 'Allgemein');
+              
               return (
-              <div key={category} className="mb-6 last:mb-0">
-                <h3 className="text-lg font-semibold text-gray-700 mb-3 border-b pb-2">
+              <div key={category} className="mb-8 last:mb-0">
+                {/* Kategorie-Überschrift */}
+                <h3 className="text-lg font-bold text-gray-800 mb-4 pb-2 border-b-2 border-blue-500 bg-gradient-to-r from-blue-50 to-transparent px-3 py-2 rounded-t">
                   {category}
                 </h3>
-                <div className="space-y-2">
-                  {categoryTasks.map((task) => (
-                    <TaskItem
-                      key={task.id}
-                      task={task}
-                      onToggle={toggleTask}
-                      onDetail={() => setSelectedTask(task)}
-                    />
-                  ))}
+                
+                {/* Unterkategorien */}
+                <div className="space-y-4">
+                  {subcategories.map((subcategory) => {
+                    const subcategoryTasks = categorySubcategories[subcategory];
+                    const showSubcategoryHeader = hasMultipleSubcategories && subcategory !== 'Allgemein';
+                    
+                    return (
+                      <div key={`${category}-${subcategory}`} className={showSubcategoryHeader ? 'ml-4' : ''}>
+                        {/* Unterkategorie-Überschrift (nur wenn mehrere Unterkategorien) */}
+                        {showSubcategoryHeader && (
+                          <h4 className="text-sm font-semibold text-gray-600 mb-2 pl-3 border-l-4 border-gray-300 bg-gray-50 py-1.5 rounded">
+                            📌 {subcategory}
+                          </h4>
+                        )}
+                        
+                        {/* Tasks der Unterkategorie */}
+                        <div className={`space-y-2 ${showSubcategoryHeader ? 'ml-4' : ''}`}>
+                          {subcategoryTasks.map((task) => (
+                            <TaskItem
+                              key={task.id}
+                              task={task}
+                              onToggle={toggleTask}
+                              onDetail={() => setSelectedTask(task)}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             );
