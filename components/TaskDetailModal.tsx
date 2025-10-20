@@ -487,11 +487,21 @@ export default function TaskDetailModal({
               {task.image_url && (
                 <div>
                   <h4 className="font-semibold text-gray-700 mb-1">Bild</h4>
-                  <img
-                    src={task.image_url}
-                    alt={task.title}
-                    className="rounded-lg max-w-full h-auto"
-                  />
+                  <div className="mt-2">
+                    <img
+                      src={task.image_url}
+                      alt={task.title}
+                      className="rounded-lg max-w-full h-auto border border-gray-200 shadow-sm"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                        const errorDiv = document.createElement('div');
+                        errorDiv.className = 'p-4 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700';
+                        errorDiv.innerHTML = '⚠️ Bild konnte nicht geladen werden.<br/>URL: <span class="text-xs break-all">' + task.image_url + '</span>';
+                        target.parentElement?.appendChild(errorDiv);
+                      }}
+                    />
+                  </div>
                 </div>
               )}
 
