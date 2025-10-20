@@ -5,11 +5,16 @@ import { useRouter } from 'next/navigation';
 import AuthGuard from '@/components/AuthGuard';
 import { useAuth } from '@/contexts/AuthContext';
 import { SCENARIOS } from '@/lib/types';
+import { supabase } from '@/lib/supabase';
+import ConfirmModal from '@/components/ConfirmModal';
 
 export default function HomePage() {
   const router = useRouter();
   const { signOut } = useAuth();
   const [activeScenarios, setActiveScenarios] = useState<string[]>([]);
+  const [showResetModal, setShowResetModal] = useState(false);
+  const [scenarioToReset, setScenarioToReset] = useState<string | null>(null);
+  const [resetting, setResetting] = useState(false);
 
   useEffect(() => {
     // Check if there are active scenarios in localStorage
@@ -31,6 +36,39 @@ export default function HomePage() {
       : [...activeScenarios, scenarioId];
     localStorage.setItem('activeScenarios', JSON.stringify(updated));
     router.push(`/checklist/${scenarioId}`);
+  };
+
+  const handleResetClick = (scenarioId: string) => {
+    setScenarioToReset(scenarioId);
+    setShowResetModal(true);
+  };
+
+  const handleResetConfirm = async () => {
+    if (!scenarioToReset) return;
+
+    setResetting(true);
+    try {
+      // Reset alle Tasks dieser Checkliste auf "nicht erledigt"
+      const { error } = await (supabase.from('tasks') as any)
+        .update({ done: false })
+        .eq('scenario', scenarioToReset);
+
+      if (error) throw error;
+
+      // Entferne aus aktiven Checklisten
+      const updated = activeScenarios.filter((id) => id !== scenarioToReset);
+      setActiveScenarios(updated);
+      localStorage.setItem('activeScenarios', JSON.stringify(updated));
+
+      // Erfolgsmeldung (optional)
+      alert('✓ Checkliste wurde erfolgreich zurückgesetzt!');
+    } catch (error) {
+      console.error('Fehler beim Zurücksetzen:', error);
+      alert('Fehler beim Zurücksetzen der Checkliste. Bitte versuchen Sie es erneut.');
+    } finally {
+      setResetting(false);
+      setScenarioToReset(null);
+    }
   };
 
   const handleLogout = async () => {
@@ -83,12 +121,22 @@ export default function HomePage() {
                           {scenario.title}
                         </span>
                       </div>
-                      <button
-                        onClick={() => router.push(`/checklist/${scenarioId}`)}
-                        className="btn-primary text-sm"
-                      >
-                        Öffnen →
-                      </button>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleResetClick(scenarioId)}
+                          className="px-3 py-1.5 text-sm border-2 border-gray-300 text-gray-600 rounded-lg hover:border-red-500 hover:text-red-600 hover:bg-red-50 transition-all duration-200 flex items-center gap-1.5"
+                          title="Checkliste zurücksetzen"
+                        >
+                          <span className="text-base">↻</span>
+                          Zurücksetzen
+                        </button>
+                        <button
+                          onClick={() => router.push(`/checklist/${scenarioId}`)}
+                          className="btn-primary text-sm"
+                        >
+                          Öffnen →
+                        </button>
+                      </div>
                     </div>
                   );
                 })}
@@ -129,6 +177,21 @@ export default function HomePage() {
           </div>
         </div>
       </div>
+
+      {/* Reset Confirmation Modal */}
+      <ConfirmModal
+        isOpen={showResetModal}
+        onClose={() => {
+          setShowResetModal(false);
+          setScenarioToReset(null);
+        }}
+        onConfirm={handleResetConfirm}
+        title="Checkliste zurücksetzen?"
+        message={`Möchten Sie die Checkliste "${SCENARIOS.find(s => s.id === scenarioToReset)?.title}" wirklich zurücksetzen? Alle erledigten Aufgaben werden als "nicht erledigt" markiert und die Checkliste wird aus den aktiven Listen entfernt.`}
+        confirmText={resetting ? 'Wird zurückgesetzt...' : 'Ja, zurücksetzen'}
+        cancelText="Abbrechen"
+        type="warning"
+      />
     </AuthGuard>
   );
 }
