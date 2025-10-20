@@ -3,7 +3,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Reise Checkapp",
+  title: "Reise Checkliste",
   description: "Progressive Web App für Reise-Checklisten zwischen Niederlauterbach und Benissa",
   manifest: "/manifest.json",
   themeColor: "#3b82f6",

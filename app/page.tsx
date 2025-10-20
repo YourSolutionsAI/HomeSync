@@ -93,16 +93,21 @@ export default function HomePage() {
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100">
         <div className="container mx-auto px-4 py-8">
           {/* Header */}
-          <div className="flex justify-between items-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-800">🧳 Reise Checkapp</h1>
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-8">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">🧳 Reise Checkliste</h1>
             <div className="flex gap-2">
               <button
                 onClick={() => router.push('/contacts')}
-                className="btn-secondary"
+                className="btn-secondary text-sm sm:text-base flex items-center justify-center"
+                title="Kontakte anzeigen"
               >
-                📞 Kontakte
+                <span className="sm:hidden">📞</span>
+                <span className="hidden sm:inline">📞 Kontakte</span>
               </button>
-              <button onClick={handleLogout} className="btn-secondary">
+              <button 
+                onClick={handleLogout} 
+                className="btn-secondary text-sm sm:text-base"
+              >
                 Abmelden
               </button>
             </div>
@@ -121,26 +126,29 @@ export default function HomePage() {
                   return (
                     <div
                       key={scenarioId}
-                      className="flex items-center justify-between p-3 bg-white rounded-lg border border-blue-200"
+                      className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 bg-white rounded-lg border border-blue-200"
                     >
-                      <div className="flex items-center gap-2">
-                        <span className="text-2xl">{scenario.icon}</span>
-                        <span className="font-medium text-gray-800">
+                      {/* Titel */}
+                      <div className="flex items-center gap-2 min-w-0 flex-1">
+                        <span className="text-2xl flex-shrink-0">{scenario.icon}</span>
+                        <span className="font-medium text-gray-800 truncate">
                           {scenario.title}
                         </span>
                       </div>
-                      <div className="flex gap-2">
+                      
+                      {/* Buttons */}
+                      <div className="flex gap-2 sm:flex-shrink-0">
                         <button
                           onClick={() => handleResetClick(scenarioId)}
-                          className="px-3 py-1.5 text-sm border-2 border-gray-300 text-gray-600 rounded-lg hover:border-red-500 hover:text-red-600 hover:bg-red-50 transition-all duration-200 flex items-center gap-1.5"
+                          className="flex-1 sm:flex-none px-3 py-2 text-sm border-2 border-gray-300 text-gray-600 rounded-lg hover:border-red-500 hover:text-red-600 hover:bg-red-50 transition-all duration-200 flex items-center justify-center gap-1.5 whitespace-nowrap"
                           title="Checkliste zurücksetzen"
                         >
                           <span className="text-base">↻</span>
-                          Zurücksetzen
+                          <span className="hidden xs:inline">Zurücksetzen</span>
                         </button>
                         <button
                           onClick={() => router.push(`/checklist/${scenarioId}`)}
-                          className="btn-primary text-sm"
+                          className="flex-1 sm:flex-none btn-primary text-sm whitespace-nowrap"
                         >
                           Öffnen →
                         </button>

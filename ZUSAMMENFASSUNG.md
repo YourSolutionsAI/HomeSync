@@ -1,6 +1,6 @@
-# 🎉 Reise Checkapp - Fertigstellung
+# 🎉 Reise Checkliste - Fertigstellung
 
-Die Reise Checkapp wurde erfolgreich erstellt! Hier ist eine Zusammenfassung der implementierten Features und nächsten Schritte.
+Die Reise Checkliste wurde erfolgreich erstellt! Hier ist eine Zusammenfassung der implementierten Features und nächsten Schritte.
 
 ## ✅ Was wurde erstellt
 
@@ -240,7 +240,7 @@ Bei Fragen oder Problemen:
 
 ## 🎉 Fertig!
 
-Ihre Reise Checkapp ist vollständig implementiert und bereit für den Einsatz!
+Ihre Reise Checkliste ist vollständig implementiert und bereit für den Einsatz!
 
 Viel Erfolg mit Ihrer App und gute Reise! ✈️🚗🏡
 
