@@ -10,8 +10,9 @@ interface AddTaskModalProps {
   onAdd: () => void;
 }
 
-const CATEGORIES = [
-  'Spezielles', // Immer ganz oben
+// Kategorien für REISE-Szenarien
+const CATEGORIES_REISE = [
+  'Spezielles',
   'Vorbereitung Abreisehaus',
   'Am Abreisetag',
   'Hausverwaltung',
@@ -21,63 +22,55 @@ const CATEGORIES = [
   'Bei Ankunft im Zielhaus',
 ];
 
-// Unterkategorien pro Kategorie
-const SUBCATEGORIES: Record<string, string[]> = {
+// Kategorien für VOR ORT-Szenarien
+const CATEGORIES_VOR_ORT = [
+  'Spezielles',
+  'Regelmäßige Wartung',
+  'Pool & Garten',
+  'Haustechnik',
+  'Reinigung & Ordnung',
+  'Einkaufen & Besorgungen',
+  'Reparaturen',
+  'Sicherheit',
+];
+
+// Unterkategorien für REISE
+const SUBCATEGORIES_REISE: Record<string, string[]> = {
   'Spezielles': ['Allgemein', 'Wichtige Informationen'],
   'Vorbereitung Abreisehaus': [
-    'Allgemein',
-    'Schlafzimmer',
-    'Büro',
-    'Gäste Apartment',
-    'Küche',
-    'Hauswirtschaftsraum',
-    'Garage',
-    'Wohnzimmer',
-    'Badezimmer',
-    'Außenbereich',
+    'Allgemein', 'Schlafzimmer', 'Büro', 'Gäste Apartment', 'Küche',
+    'Hauswirtschaftsraum', 'Garage', 'Wohnzimmer', 'Badezimmer', 'Außenbereich',
   ],
-  'Am Abreisetag': [
-    'Allgemein',
-    'Schlafzimmer',
-    'Küche',
-    'Garage',
-    'Außenbereich',
-  ],
-  'Hausverwaltung': [
-    'Allgemein',
-    'Elektronik',
-    'Heizung/Klima',
-    'Wasser',
-    'Gas',
-    'Außenbereich',
-    'Pool',
-  ],
+  'Am Abreisetag': ['Allgemein', 'Schlafzimmer', 'Küche', 'Garage', 'Außenbereich'],
+  'Hausverwaltung': ['Allgemein', 'Elektronik', 'Heizung/Klima', 'Wasser', 'Gas', 'Außenbereich', 'Pool'],
   'Haus verschließen': [
-    'Allgemein',
-    'Fenster und Türen',
-    'Schlüssel',
-    'Schlafzimmer',
-    'Büro',
-    'Gäste Apartment',
-    'Garage',
-    'Hauswirtschaftsraum',
-    'Wohnzimmer',
+    'Allgemein', 'Fenster und Türen', 'Schlüssel', 'Schlafzimmer', 'Büro',
+    'Gäste Apartment', 'Garage', 'Hauswirtschaftsraum', 'Wohnzimmer',
   ],
   'Sicherheit': ['Allgemein', 'Alarmanlage'],
-  'Aufgaben unterwegs/Flughafen': [
-    'Allgemein',
-    'Check-in',
-    'Gepäck',
-    'Sicherheit',
-    'Boarding',
+  'Aufgaben unterwegs/Flughafen': ['Allgemein', 'Check-in', 'Gepäck', 'Sicherheit', 'Boarding'],
+  'Bei Ankunft im Zielhaus': ['Allgemein', 'Elektronik einschalten', 'Heizung/Klima', 'Küche', 'Sicherheit'],
+};
+
+// Unterkategorien für VOR ORT
+const SUBCATEGORIES_VOR_ORT: Record<string, string[]> = {
+  'Spezielles': ['Allgemein', 'Wichtige Informationen'],
+  'Regelmäßige Wartung': [
+    'Allgemein', 'Wöchentlich', 'Monatlich', 'Saisonal',
+    'Heizung/Klima', 'Elektronik', 'Wasser',
   ],
-  'Bei Ankunft im Zielhaus': [
-    'Allgemein',
-    'Elektronik einschalten',
-    'Heizung/Klima',
-    'Küche',
-    'Sicherheit',
+  'Pool & Garten': ['Allgemein', 'Pool Pflege', 'Poolchemie', 'Rasen', 'Pflanzen', 'Bewässerung', 'Terrasse'],
+  'Haustechnik': [
+    'Allgemein', 'Heizung/Klima', 'Elektrik', 'Wasser/Sanitär',
+    'Gas', 'Alarmanlage', 'Rollläden',
   ],
+  'Reinigung & Ordnung': [
+    'Allgemein', 'Schlafzimmer', 'Küche', 'Bad', 'Wohnzimmer',
+    'Garage', 'Außenbereich', 'Fenster',
+  ],
+  'Einkaufen & Besorgungen': ['Allgemein', 'Lebensmittel', 'Haushalt', 'Poolbedarf', 'Garten', 'Werkzeug'],
+  'Reparaturen': ['Allgemein', 'Dringend', 'Geplant', 'Kleinreparaturen'],
+  'Sicherheit': ['Allgemein', 'Alarmanlage', 'Schlüssel', 'Beleuchtung'],
 };
 
 export default function AddTaskModal({
@@ -86,6 +79,12 @@ export default function AddTaskModal({
   onAdd,
 }: AddTaskModalProps) {
   const scenario = SCENARIOS.find((s) => s.id === scenarioId);
+  
+  // Wähle Kategorien basierend auf Szenario-Typ
+  const isVorOrt = scenario?.type === 'Vor Ort';
+  const CATEGORIES = isVorOrt ? CATEGORIES_VOR_ORT : CATEGORIES_REISE;
+  const SUBCATEGORIES = isVorOrt ? SUBCATEGORIES_VOR_ORT : SUBCATEGORIES_REISE;
+
   const [formData, setFormData] = useState({
     title: '',
     description: '',

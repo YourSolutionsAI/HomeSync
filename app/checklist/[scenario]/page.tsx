@@ -165,6 +165,33 @@ export default function ChecklistPage() {
   const progress = totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
   const allCompleted = totalCount > 0 && completedCount === totalCount;
 
+  // Kategorie-Reihenfolge basierend auf Szenario-Typ
+  const isVorOrt = scenario?.type === 'Vor Ort';
+  
+  const CATEGORY_ORDER_REISE = [
+    'Spezielles',
+    'Vorbereitung Abreisehaus',
+    'Am Abreisetag',
+    'Hausverwaltung',
+    'Haus verschließen',
+    'Sicherheit',
+    'Aufgaben unterwegs/Flughafen',
+    'Bei Ankunft im Zielhaus',
+  ];
+
+  const CATEGORY_ORDER_VOR_ORT = [
+    'Spezielles',
+    'Regelmäßige Wartung',
+    'Pool & Garten',
+    'Haustechnik',
+    'Reinigung & Ordnung',
+    'Einkaufen & Besorgungen',
+    'Reparaturen',
+    'Sicherheit',
+  ];
+
+  const CATEGORY_ORDER = isVorOrt ? CATEGORY_ORDER_VOR_ORT : CATEGORY_ORDER_REISE;
+
   // Group tasks by category
   const groupedTasks = tasks.reduce((acc, task) => {
     if (!acc[task.category]) {
@@ -173,6 +200,16 @@ export default function ChecklistPage() {
     acc[task.category].push(task);
     return acc;
   }, {} as Record<string, Task[]>);
+
+  // Sort categories according to CATEGORY_ORDER
+  const sortedCategories = Object.keys(groupedTasks).sort((a, b) => {
+    const indexA = CATEGORY_ORDER.indexOf(a);
+    const indexB = CATEGORY_ORDER.indexOf(b);
+    // If category not in order list, put it at the end
+    if (indexA === -1) return 1;
+    if (indexB === -1) return -1;
+    return indexA - indexB;
+  });
 
   if (loading) {
     return (
@@ -275,7 +312,9 @@ export default function ChecklistPage() {
               </button>
             </div>
 
-            {Object.entries(groupedTasks).map(([category, categoryTasks]) => (
+            {sortedCategories.map((category) => {
+              const categoryTasks = groupedTasks[category];
+              return (
               <div key={category} className="mb-6 last:mb-0">
                 <h3 className="text-lg font-semibold text-gray-700 mb-3 border-b pb-2">
                   {category}
@@ -291,7 +330,8 @@ export default function ChecklistPage() {
                   ))}
                 </div>
               </div>
-            ))}
+            );
+            })}
 
             {tasks.length === 0 && (
               <p className="text-gray-500 text-center py-8">
