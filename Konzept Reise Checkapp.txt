@@ -1,0 +1,268 @@
+Konzept: Progressive Web App für Reise-Checklisten (Vercel + Supabase)
+Einleitung und Zielsetzung
+
+Diese Anwendung soll als Progressive Web App (PWA) entwickelt werden, die bei der Organisation aller To-Dos rund um die Abreise und Ankunft in zwei Ferienhäusern (Niederlauterbach in Frankreich und Benissa in Spanien) hilft. Insbesondere sollen Checklisten für Abfahrt (Autoreise), Abflug (Flugreise) sowie To-Dos vor Ort an den jeweiligen Häusern verwaltet werden. Die App soll intuitiv und übersichtlich sein, sodass Nutzer vom Startbildschirm aus schnell die passende Checkliste auswählen können (z.B. “Abflug Niederlauterbach nach Benissa” oder “Vor Ort Benissa”). Ziel ist es, alle notwendigen Aufgaben in logischer Reihenfolge abzubilden – vom Kofferpacken über Aufgaben am Flughafen bis hin zu Erledigungen direkt bei Ankunft im Haus – und diese Schritt für Schritt abhaken zu können. Durch diese App wird die bisher unstrukturierte Aufgabenliste (ein langer Fließtext) in eine interaktive, leicht verständliche Checkliste umgewandelt, die das Reisen und Hausmanagement erheblich erleichtert.
+
+Hauptziele der Anwendung: Eine klare Strukturierung der Abläufe, einfache Bedienbarkeit (auch für weniger technikaffine Nutzer), Offline-Fähigkeit unterwegs, sowie die Möglichkeit, Aufgaben mit zusätzlichen Informationen (Bilder, Notizen, Links) anzureichern. Alle Nutzer sollen gleichberechtigt alle Funktionen nutzen dürfen – es gibt keine admin-spezifischen Bereiche. Die App wird in deutscher Sprache umgesetzt, da die Nutzer deutschsprachig sind.
+
+Technologie-Stack und Architektur
+
+Die App wird mit Vercel als Host und Supabase als Backend entwickelt. Als Frontend-Framework bietet sich Next.js (React) an, da es nahtlos auf Vercel deploybar ist und eine gute Grundlage für PWAs bietet (Next.js erlaubt sowohl statisches Vor-rendern als auch client-seitige Funktionen). Zudem existieren Bibliotheken wie next-pwa, die PWA-Funktionen (Service Worker, Caching) in Next.js-Projekten sehr einfach integrieren
+medium.com
+. Alternativ wäre auch ein anderes modernes Frontend-Framework (z.B. SvelteKit oder React mit CRA) denkbar; aufgrund der engen Integration mit Vercel und der vorhandenen PWA-Unterstützung ist Next.js jedoch eine sinnvolle Wahl.
+
+Supabase wird als Backend gewählt, da es einen Großteil der benötigten Server-Funktionen out-of-the-box bereitstellt: eine SQL-Datenbank (PostgreSQL) für persistente Speicherung, integrierte Benutzerauthentifizierung, Dateispeicherung für Bilder sowie Echtzeit-Updates
+natively.dev
+. Mit Supabase erhält man quasi ein fertiges „Backend as a Service“, das als „Backoffice“ der App dient und die komplizierte Eigenentwicklung von Datenbank und Authentifizierung erspart
+natively.dev
+. Die Verbindung zur Supabase-Datenbank erfolgt über Supabase’s JavaScript Library im Frontend. Wichtig ist, ausschließlich den öffentlichen Anon-Schlüssel im Client zu nutzen und sicherheitsrelevante Keys geheim zu halten
+natively.dev
+.
+
+Architekturübersicht: Beim Aufrufen der PWA lädt der Browser die Anwendung von Vercel (Next.js App) – die PWA kann nach Installation auch wie eine eigenständige App im Vollbild laufen. Ein Service Worker sorgt dafür, dass die Anwendung offline verfügbar bleibt (Details siehe unten). Die App kommuniziert mit Supabase über Web-API-Aufrufe (z.B. zum Laden der Aufgaben oder Speichern von Änderungen). Durch Supabase Auth ist der Zugang geschützt: Nutzer müssen sich einmalig mit E-Mail und Passwort einloggen, bevor sie die Checklisten sehen. Die Daten (Aufgaben, Kontakte etc.) werden in der Supabase-Datenbank gehalten. Wenn ein Nutzer eine Aufgabe als erledigt markiert oder neue Aufgaben hinzufügt, wird dies in der DB gespeichert – und dank Supabase’s optionaler Realtime-Funktion könnten alle anderen eingeloggten Nutzer die Aktualisierung sofort sehen
+natively.dev
+ (praktisch, falls mehrere Familienmitglieder parallel Aufgaben abhaken). Die fertige Anwendung wird als PWA offlinefähig und installierbar sein, sodass sie z.B. am Smartphone auch ohne Netz vor Ort funktioniert.
+
+Benutzeranmeldung (Authentication)
+
+Die App erfordert einen Login (Passwort-Authentifizierung), umgesetzt über Supabase Auth. Supabase ermöglicht out-of-the-box eine einfache Registrierung/Anmeldung mit E-Mail und Passwort
+natively.dev
+. In der Supabase-Konsole kann dafür die Email/Password-Option aktiviert werden. Beim Start der App sieht der Nutzer zunächst einen Login-Screen, wo er seine Zugangsdaten eingibt. Nach erfolgreicher Anmeldung erhält die App einen Auth-Session-Token, der für nachfolgende Anfragen an die Supabase-API genutzt wird (über die Supabase JS SDK automatisch gehandhabt). Es gibt keine unterschiedlichen Rollen – alle angemeldeten Benutzer haben die gleichen Rechte und dürfen Checklisten einsehen, Aufgaben abhaken/hinzufügen etc. (Das vereinfacht die Berechtigungslogik erheblich, da keine speziellen Rollen geprüft werden müssen.) Optional könnte man in Zukunft eine Rollenverwaltung ergänzen, aber laut Vorgabe ist dies nicht nötig („Alle Nutzer dürfen alles“).
+
+Da vermutlich ein kleiner Nutzerkreis (Familienmitglieder) involviert ist, kann man entscheiden, ob jeder ein eigenes Login bekommt oder ob ein gemeinsamer Account genutzt wird. Technisch unterstützt Supabase mehrere Benutzer; wenn alle Benutzer alles dürfen, könnte man entweder einen gemeinsamen Account nutzen oder mehrere Accounts anlegen, die aber alle auf die gleichen Daten zugreifen. Im einfachsten Fall werden alle Aufgaben/Listen in einer gemeinsamen Datenbank-Instanz ohne nutzerspezifigen Filter gespeichert, sodass jeder Nutzer nach dem Login identische Inhalte sieht.
+
+Startbildschirm und Szenario-Auswahl
+
+Nach dem Login präsentiert die App einen Startbildschirm, der die Auswahl der gewünschten Checkliste ermöglicht. Hier werden die möglichen Szenarien übersichtlich dargestellt, z.B. als große Buttons oder Kacheln. Vorgesehen sind folgende Szenarien:
+
+Abfahrt (Auto) von Niederlauterbach nach Benissa – Checkliste für Autoreise vom Haus in Frankreich nach Spanien.
+
+Abfahrt (Auto) von Benissa nach Niederlauterbach – Checkliste für Rückreise per Auto.
+
+Abflug (Flugzeug) von Niederlauterbach nach Benissa – Checkliste für Flugreise vom französischen Haus nach Spanien.
+
+Abflug (Flugzeug) von Benissa nach Niederlauterbach – Checkliste für Flugreise zurück.
+
+Vor Ort in Niederlauterbach – To-Do-Liste für Aufgaben während des Aufenthalts im Haus in Frankreich.
+
+Vor Ort in Benissa – To-Do-Liste für Aufgaben während des Aufenthalts im Haus in Spanien.
+
+Der Nutzer kann auf dem Startbildschirm also zunächst das Haus (Niederlauterbach oder Benissa) und die Art des Vorgangs (Abfahrt, Abflug oder Vor-Ort-Aufgaben) auswählen. Dies könnte UI-seitig z.B. mit zwei Dropdowns oder einer interaktiven Karte umgesetzt werden, aber am benutzerfreundlichsten ist vermutlich eine direkte beschriftete Button-Auswahl pro Szenario, damit man mit einem Klick zur gewünschten Liste gelangt.
+
+Persistenz der Auswahl: Sobald eine Checkliste ausgewählt wurde, wird diese Liste zur aktiven Startseite der App, solange bis sie abgeschlossen oder zurückgesetzt ist. Das heißt, wenn der Nutzer die App erneut öffnet (und noch Aufgaben offen sind), sieht er direkt wieder die zuletzt aktive To-Do-Liste anstatt erneut das Auswahlmenü. Diese Logik erhöht die Usability: man muss während der Reise nicht jedes Mal die Liste neu heraussuchen. Die Umsetzung erfolgt, indem die App die aktuelle aktive Liste entweder lokal speichert (z.B. im LocalStorage oder IndexedDB im Browser) oder in der Datenbank pro Benutzer einen Status vermerkt (bei gemeinsamer Nutzung eher lokal pro Gerät sinnvoll). Beim Start prüft die App, ob es eine aktive, nicht-abgeschlossene Liste gibt, und zeigt diese an.
+
+Ein manuelles Zurück-zur-Auswahl ist natürlich ebenfalls möglich: Der Nutzer kann die aktive Liste zurücksetzen. Hierbei wird eine Bestätigung verlangt (z.B. Dialog "Möchten Sie die Checkliste wirklich zurücksetzen?"), um versehentliches Zurücksetzen zu vermeiden. Nach Bestätigung werden alle Aufgaben dieser Liste als unerledigt markiert und die App wechselt zurück zum Startbildschirm.
+
+To-Do Listen Anzeige und Aufbau
+
+Wählt der Nutzer ein Szenario, öffnet sich die entsprechende To-Do Liste. Diese Liste besteht aus einzelnen Aufgaben mit Checkboxen zum Abhaken. Der Aufbau der Liste ist kategorisch und logisch gegliedert, um dem tatsächlichen Reiseablauf zu folgen. Beispielsweise bei “Abflug Niederlauterbach nach Benissa” könnte die Liste in folgende Abschnitte unterteilt sein:
+
+Vorbereitungen zuhause (Packen) – z.B. Koffer packen, wichtige Dokumente einstecken, Haus sichern (Fenster schließen, Alarm einstellen, etc.).
+
+Aufgaben unterwegs/Flughafen – z.B. Check-in durchführen, Gepäckaufgabe, Parkplatz Auto, Boarding-Pässe bereithalten.
+
+Bei Ankunft im Zielhaus – z.B. Alarmanlage deaktivieren, Wasser/Heizung anstellen, Kühlschrank auffüllen, etc.
+
+Die App kann diese Abschnitte visuell durch Überschriften in der Liste trennen, um dem Nutzer eine bessere Orientierung zu geben. Aufgaben werden dann in der entsprechenden Kategorie angezeigt. Die Reihenfolge ist fix vorgegeben oder konfigurierbar, so dass z.B. immer erst "Packen" kommt, dann "Flughafen", dann "Ankunft". Diese logische Reihenfolge entspricht der tatsächlichen Timeline der Reise.
+
+Darstellung: Jede Aufgabe wird als Listeneintrag mit Checkbox angezeigt. Daneben wird der Aufgabentext genannt. Rechts daneben könnte ein Info-Button oder ein Pfeil auftauchen, über den man Details zur Aufgabe aufrufen kann (siehe Abschnitt Aufgaben-Details und Anhänge). Erledigte Aufgaben werden entweder durchgestrichen oder ausgegraut dargestellt, oder ganz ausgeblendet – je nach Präferenz, aber vermutlich leicht ausgegraut + Häkchen, damit man noch sieht, was erledigt wurde. Am unteren oder oberen Rand der Liste kann ein Fortschrittsbalken oder eine Prozentanzeige die Gesamt-Progression anzeigen (z.B. "12/20 Aufgaben erledigt").
+
+Interaktivität: Der Nutzer kann Aufgaben durch Antippen der Checkbox als erledigt markieren. Dabei wird sofort in der lokalen App die Darstellung aktualisiert (Häkchen gesetzt, Aufgabe abgehakt). Gleichzeitig sollte diese Änderung in der Datenbank gespeichert werden (damit bei einem Gerätewechsel oder bei Mehrbenutzer-Betrieb der Status nicht verloren geht). Über Supabase lässt sich dies mit einer einfachen Update-Operation auf den Task-Eintrag umsetzen (done = true/false). Da Supabase Echtzeit-Updates erlaubt, würden andere Nutzer oder andere Geräte (die auf derselben Liste sind) die Änderung sofort sehen, ohne manuelles Neuladen
+natively.dev
+.
+
+Solange nicht alle Aufgaben abgehakt sind, bleibt diese Liste wie gesagt als Startseite bestehen. Wenn alle Aufgaben erledigt sind, kann die App automatisch in einen "Abgeschlossen"-Zustand wechseln: z.B. ein Glückwunsch anzeigen "Alle To-Dos erledigt!" und einen Button "Zurück zur Auswahl" anbieten. Sobald der Nutzer bestätigt, wird intern die Liste zurückgesetzt (alle Tasks wieder auf unerledigt gesetzt, sodass sie für den nächsten Gebrauch bereit sind) und der Startbildschirm erscheint wieder. Die automatische Rücksetzung nach Abschluss ist sinnvoll, damit die Liste für den nächsten Reisevorgang wieder von vorn genutzt werden kann, ohne dass der Nutzer jede Aufgabe manuell ent-haken muss. (Dennoch könnte man überlegen, ob abgeschlossene Checklisten archiviert werden – falls man rückblickend prüfen möchte, wann was erledigt wurde. Aber in diesem Anwendungsfall ist das vermutlich nicht nötig.)
+
+Aufgaben-Details und Anhänge
+
+Jede Aufgabe soll erweiterte Informationen enthalten können. In der Listenansicht sieht man primär den Titel der Aufgabe. Über einen kleinen Info-Button oder durch Antippen der Aufgabe kann der Nutzer weitere Details anzeigen und bearbeiten:
+
+Beschreibung/Notizen: Ein längerer Beschreibungstext oder Notizfeld für zusätzliche Erläuterungen zur Aufgabe. Hier können z.B. Hinweise stehen warum etwas getan werden muss oder wie es durchzuführen ist.
+
+Fotos/Bilder: Zu einer Aufgabe können ein oder mehrere Bilder hinterlegt werden (z.B. ein Foto der Stelle, die überprüft werden muss, oder ein Beispielbild). Diese könnten als kleine Thumbnails angezeigt werden; per Klick darauf sieht man die vergrößerte Ansicht. Supabase Storage wird genutzt, um solche Bilder dateibasiert zu speichern – es funktioniert wie ein Online-Ordner für die App
+natively.dev
+. Beim Hochladen eines Fotos über die App wird das Bild in einen Storage-Bucket (z.B. task-images) hochgeladen und mit der Aufgabe verknüpft (die URL oder Pfad wird in der Aufgaben-DB gespeichert). So können Bilder plattformübergreifend abgerufen werden.
+
+Links: Ein Aufgaben-Detail kann einen URL-Link enthalten. Beispielsweise könnte bei "Flug einchecken" ein Link zur Website der Fluggesellschaft hinterlegt sein, oder bei "KFZ versichern" ein Link zur Versicherung.
+
+Kategorie/Label: Intern kann jede Aufgabe eine Kategorie haben (wie "Haus sichern", "Reisevorbereitung", "Hausverwaltung" etc.), was z.B. für die logische Gruppierung genutzt wird. Diese Kategorie könnte auch im Detail oder via Icon angezeigt werden.
+
+Priorität oder Fälligkeitszeit: (Optional) Man könnte Aufgaben Prioritäten oder Deadlines geben, z.B. "bis spätestens Abfahrtstag 8:00 erledigen". Das wäre ein zusätzliches Feld, um wichtige Aufgaben zu kennzeichnen. Für den Anfang evtl. nicht zwingend, aber falls es zeitkritische Punkte gibt, wäre eine Markierung (rot = wichtig) hilfreich.
+
+Der Nutzer kann diese Details bearbeiten. Über einen "Bearbeiten"-Modus (z.B. Icon am Task) können Titel, Beschreibung, Anhänge etc. geändert werden. Änderungen werden wieder in der Supabase-Datenbank gespeichert. Anhänge wie Fotos lassen sich auch löschen oder austauschen. Supabase Storage ermöglicht es auch, Dateien wieder zu entfernen oder durch neue Versionen zu ersetzen.
+
+Wichtig ist, dass trotz der Möglichkeit zur Detailansicht die Hauptliste übersichtlich bleibt – deshalb werden die Details erst auf Klick einblendet, um nicht jede Aufgabe sofort mit Infos zu überfrachten. Die Aufgabenliste bleibt damit kompakt und fokussiert auf die Task-Titel zum Abhaken.
+
+Hinzufügen neuer Aufgaben (Formular)
+
+Neben den vorgegebenen Aufgaben möchte der Nutzer eigene To-Dos hinzufügen können – entweder spontan während er in der Checkliste ist, oder vorab. Hierfür gibt es zwei Möglichkeiten in der App:
+
+Direkt in der To-Do Liste: Am Ende (oder Anfang) jeder Liste könnte ein Button "+ Aufgabe hinzufügen" sein. Klickt man darauf, öffnet sich ein kleines Eingabeformular (modaler Dialog oder neue Seite) zur Eingabe der Aufgabendetails (Titel etc., siehe unten). Die neue Aufgabe wird dann in der aktuellen Liste gespeichert.
+
+Über den Hauptbildschirm: Alternativ (oder zusätzlich) könnte auf dem Startbildschirm eine Option "Neue Aufgabe hinzufügen" existieren. Diese würde zunächst fragen, für welche Checkliste die Aufgabe bestimmt ist (z.B. Dropdown "Abflug Niederlauterbach → Benissa" etc.), und dann ebenfalls die Felder für die Aufgabe abfragen.
+
+Das Formular für neue Aufgaben sollte logisch aufgebaut sein und alle wichtigen Informationen erfassen:
+
+Zugehörige Liste: Auswahlfeld, in dem der Nutzer das Szenario wählt, zu dem die Aufgabe gehören soll (z.B. via Dropdown mit den 6 Optionen wie oben beschrieben). Wenn man die Aufgabe direkt innerhalb einer Liste hinzufügt, ist dieses Feld bereits vorbelegt.
+
+Titel der Aufgabe: Kurze Beschreibung, was zu tun ist (Pflichtfeld, da dies in der Liste angezeigt wird).
+
+Beschreibung/Details: Optionales Feld für weitere Erläuterungen.
+
+Kategorie: Evtl. ein Dropdown zur Auswahl der Kategorie (z.B. "Packen", "Hausverwaltung", "Unterwegs" etc.), damit die Aufgabe an der richtigen Stelle eingeordnet wird. Alternativ kann die App die Position auch anhand von Schlagworten oder einfach am Ende der Liste einfügen; eine explizite Kategorie-Auswahl gibt dem Nutzer jedoch Kontrolle, wo die Aufgabe auftaucht.
+
+Foto hinzufügen: Möglichkeit ein Foto von der Kamera oder Galerie hochzuladen (optional). Beim Speichern wird das Bild in Supabase Storage hochgeladen und die Referenz gespeichert.
+
+Link: Optionaler URL-Link, falls die Aufgabe mit einer Webseite verbunden ist.
+
+Sonstige Notiz: Freitextfeld für Bemerkungen.
+
+Nach Eingabe klickt der Nutzer auf "Speichern". Die App validiert die Eingaben (z.B. Titel nicht leer) und legt dann einen neuen Datensatz in der Supabase-Tabelle für Aufgaben an. Dank der Echtzeit-Updates von Supabase könnte die neu hinzugefügte Aufgabe bei allen Nutzern, die gerade die entsprechende Liste geöffnet haben, sofort erscheinen
+natively.dev
+.
+
+Usability-Aspekt: Damit neue Aufgaben nicht untergehen, könnte die App neue Einträge hervorheben (z.B. durch eine Hintergrundfarbe) oder automatisch an der richtigen Position einsortieren. Falls die Liste nach Kategorien gruppiert ist, müsste die App erkennen, wohin die neue Aufgabe gehört. Eine einfache Implementierung wäre, neue Aufgaben zunächst ans Ende der Liste zu setzen und dem Nutzer die Möglichkeit zu geben, sie per Drag & Drop oder via Bearbeiten-Dialog in eine andere Kategorie zu verschieben. Alternativ könnte man beim Hinzufügen die Kategorie abfragen, wie oben erwähnt, um den Ort festzulegen.
+
+Neue Aufgaben bleiben in der Datenbank gespeichert und stehen somit auch bei zukünftigen Durchläufen der Checkliste zur Verfügung. So kann der Nutzer die Checklisten im Laufe der Zeit immer weiter optimieren und an seine Bedürfnisse anpassen.
+
+Verwaltung wichtiger Kontakte und Orte
+
+Die App soll auch die Möglichkeit bieten, wichtige Kontakte und Standorte zu hinterlegen – z.B. Kontaktdaten der Hausverwaltung, der lokalen KFZ-Werkstatt, des Elektrikers, etc. Diese Informationen sollen insbesondere dann schnell auffindbar sein, wenn sie benötigt werden, und idealerweise kontextbezogen in den Checklisten auftauchen.
+
+Umsetzung Kontaktverwaltung: Es bietet sich an, einen separaten Abschnitt “Kontakte” oder “Wichtige Infos” in der App zu haben. Dort kann man Einträge anlegen mit folgenden Feldern:
+
+Name des Kontakts/Ortes: z.B. "Elektriker Benissa", "Hausverwaltung Frankreich", "Werkstatt Benissa".
+
+Kategorie/Rolle: Kurze Bezeichnung was es ist (Elektriker, Hausverwaltung, Werkstatt, etc.).
+
+Zugehöriger Ort: Auswahl zwischen Niederlauterbach oder Benissa, damit klar ist, für welches Haus dieser Kontakt relevant ist.
+
+Kontaktinformationen: Je nach Typ Telefonnummer, E-Mail, Adresse, Webseite etc. (Mehrere Felder oder ein Freitext).
+
+Notizen: Optional zusätzliche Hinweise (z.B. Öffnungszeiten, Ansprechpartner).
+
+Diese Kontakte werden in einer eigenen Supabase-Tabelle gespeichert, z.B. contacts. Alle Nutzer können diese Liste verwalten (neue Kontakte hinzufügen, bearbeiten, löschen). Im UI könnte es neben der Haupt-Checklisten-Funktion einen Menüpunkt "Kontakte" geben, der die Liste aller gespeicherten Kontakte zeigt, filterbar nach Standort.
+
+Integration in die To-Do Listen: Um die Kontakte kontextbezogen anzuzeigen, gibt es mehrere Ansätze. Eine einfache Variante: Wenn der Nutzer eine Checkliste für einen bestimmten Ort aufruft (z.B. Benissa), kann am Rand oder am Ende der Liste ein Hinweisbereich “Wichtige Kontakte – Benissa” erscheinen, wo alle relevanten Kontakte aufgelistet sind (Elektriker, Hausverwaltung, etc. für Benissa). So hat man schnell Zugriff, falls z.B. während einer Aufgabe "Strom abschalten" ein Problem auftaucht und man den Elektriker anrufen muss.
+
+Noch besser ist eine dynamische Verknüpfung über Kategorien der Aufgaben: In den Aufgaben könnte man festlegen, dass bestimmte Aufgaben einer Kategorie bedürfen evtl. Kontaktaufnahme. Im Beispiel wurde erwähnt, dass “Elektriker Spanien” angezeigt werden soll, wenn eine Aufgabe der Kategorie "Hausverwaltung" hinzugefügt wird. Um dies umzusetzen, könnte man den Kontakten ebenfalls Kategorien zuordnen (z.B. Elektriker -> Kategorie Hausverwaltung) und dann, sobald die aktuelle Checkliste mindestens eine Aufgabe der Kategorie Hausverwaltung enthält, den Kontakt "Elektriker (Spanien)" prominent anzeigen (z.B. als Infobox "Elektriker Benissa: +34 123456789").
+
+Eine einfachere Implementierung ist eventuell, die Kontakte statisch nach Ort anzuzeigen, da vermutlich alle hinterlegten Kontakte im Kontext des Hauses nützlich sind. Dynamisch nach Aufgabenkategorie zu filtern wäre ein optionales Feintuning. In jedem Fall erleichtert diese Funktion die Organisation, da alle notwendigen Telefonnummern/Adressen an einem Ort gespeichert sind und nicht separat gesucht werden müssen. Die App fungiert so auch als kleiner Informationshub für das Ferienhaus-Management (alle wichtigen Nummern immer griffbereit).
+
+Datenmodell in Supabase
+
+Für die Umsetzung der obigen Funktionen wird folgendes Datenbank-Schema in Supabase empfohlen:
+
+Tabelle tasks (Aufgaben): Hier werden alle To-Do-Items gespeichert. Mögliche Spalten:
+
+id: Primärschlüssel (eindeutige ID pro Aufgabe, automatisch).
+
+title: Kurztext/Titel der Aufgabe (z.B. "Kühlschrank leeren").
+
+description: Längerer Beschreibungstext/Notiz zur Aufgabe (optional).
+
+category: Kategorie/Abschnitt der Aufgabe als Text oder Enum (z.B. "Packen", "Hausverwaltung", "Flug", "Ankunft" etc.).
+
+location: Ort/Haus, auf den sich die Aufgabe bezieht (Enum: Niederlauterbach oder Benissa).
+
+type: Art des Vorgangs (Enum: Abfahrt, Abflug oder Vor Ort), um zusammen mit location das Szenario zu bestimmen.
+
+Alternativ zur Kombination aus location+type könnte man auch eine Spalte scenario_id nutzen, die auf eine separate Tabelle scenarios referenziert, wo die 6 möglichen Szenarien definiert sind. Für Einfachheit reichen aber wahrscheinlich die beiden Felder, oder sogar ein String-Feld scenario (mit Werten wie "Abfahrt_Niederlauterbach_Benissa").
+
+done: Boolesches Feld, ob die Aufgabe erledigt ist (true/false). Standard beim Erstellen = false (unerledigt). Dieses Feld wird beim Abhaken auf true gesetzt
+natively.dev
+ (Aufbau ähnlich dem klassischen Beispiel einer Tasks-Tabelle mit ID, Text und erledigt-Status).
+
+order: Eine Zahl, die die Reihenfolge der Aufgabe in der Liste angibt. Damit kann man die Aufgaben in der gewünschten logischen Reihenfolge sortieren (z.B. 1 = zuerst, 2 = zweitens...). Die App kann diese Reihenfolge pro Kategorie gestalten (z.B. 1-5 für Packen, 6-8 für Flughafen etc.).
+
+link: URL-Link (Text) falls vorhanden.
+
+image_url: Pfad oder URL zu einem hinterlegten Bild (optional, verweist auf Supabase Storage).
+
+notes: weiteres Textfeld für Notizen (kann auch im Feld description zusammengefasst sein).
+
+created_at: Timestamp (automatisch), wann die Aufgabe hinzugefügt wurde.
+
+updated_at: Timestamp für letzte Änderung (automatisch via Supabase).
+
+Tabelle contacts (Kontakte): Für wichtige Kontakte/Orte.
+
+id: Primärschlüssel.
+
+name: Name/Beschreibung des Kontakts (z.B. "Elektriker Benissa").
+
+role: Rolle oder Kategorie des Kontakts (z.B. "Elektriker", "Hausverwaltung", "Werkstatt").
+
+location: Bezug zum Haus/Ort (Enum: Niederlauterbach oder Benissa).
+
+phone: Telefonnummer (optional, falls zutreffend).
+
+email: E-Mail-Adresse (optional).
+
+address: Adresse oder URL (optional).
+
+notes: Notizen (z.B. Ansprechpartner, Öffnungszeiten, Kundennummern, etc.).
+
+created_at: Timestamp.
+
+Tabelle scenarios (optional): Falls man die Szenario-Auswahl normalisieren will:
+
+id: z.B. "abfahrt_nl_ben" als Code oder einfache ID.
+
+from_location: Ort von (Niederlauterbach/Benissa).
+
+to_location: Ort nach (für Vor Ort könnte man from=to).
+
+mode: Art (Auto/Flug/Vor Ort).
+
+title: Anzeigename (z.B. "Abfahrt Niederlauterbach → Benissa").
+
+Die tasks-Tabelle könnte auch ohne separate scenarios umgesetzt werden, indem man z.B. ein Feld scenario als Textspeicher nutzt. Wichtig ist, dass man alle Aufgaben einer bestimmten Liste per Abfrage filtern kann, z.B.: SELECT * FROM tasks WHERE location='Benissa' AND type='Abfahrt' ORDER BY order (dies würde alle Aufgaben für "Abfahrt Benissa→Niederlauterbach" liefern, sofern wir definieren, dass location=Startpunkt ist und type=Abfahrt/Abflug). Alternativ könnte location immer das Haus sein, wo die Liste ausgeführt wird, und ein weiteres Feld destination für das Zielhaus bei Reisen – aber da es nur zwei Orte gibt, kann die Logik im Code fest verdrahtet werden (z.B. wenn type=Abfahrt und location=Benissa, Ziel ist Niederlauterbach).
+
+Für die Offline-Fähigkeit ist zudem zu überlegen, welche Daten lokal vorgehalten werden müssen. Vermutlich alle obigen Tabellen: also die Listen der Tasks und Kontakte. Da diese Daten in der Regel nicht riesig sind, kann man beim Laden der App einmalig alle relevanten Datensätze aus Supabase abrufen und lokal (im IndexedDB oder im Memory-State) speichern. Bei Online-Verbindung kann die App via Supabase’s Echtzeit-Abos auch Änderungen streamen, aber im Offline-Modus greift sie dann auf die lokale Kopie zu.
+
+Offline-Funktionalität (PWA)
+
+Ein Kernfeature der App ist, dass sie auch offline funktionieren soll – das ist besonders praktisch, wenn man unterwegs keinen Internetzugang hat (z.B. im Ausland ohne Roaming oder im Flugzeug). Als Progressive Web App kann die Anwendung wie eine native App offline betrieben werden. PWAs überbrücken die Lücke zwischen Web- und Mobile-App und bieten Features wie Offline-Unterstützung, Installierbarkeit und Push Notifications
+medium.com
+.
+
+Technisch wird die Offline-Fähigkeit hauptsächlich über einen Service Worker erreicht. Ein Service Worker ist ein Skript, das der Browser im Hintergrund laufen lässt und das Netzwerkzugriffe abfangen kann
+medium.com
+. Bei unserer App wird der Service Worker insbesondere die Cache-Storage API nutzen, um die wichtigen Ressourcen und Daten lokal vorzuhalten. Das bedeutet: Beim ersten Laden der App werden alle wesentlichen Dateien (HTML, CSS, JS, Icons) sowie ggf. schon bekannte Daten (z.B. die aktuell ausgewählte To-Do-Liste und Aufgaben) in einem Cache gespeichert. Der Service Worker kann dann bei späteren Aufrufen die Inhalte aus dem Cache liefern, falls keine Internetverbindung besteht
+developers.google.com
+. So wird die App auch ohne Netz so weit wie möglich voll funktionsfähig sein.
+
+Wir werden eine geeignete Caching-Strategie einsetzen – z.B. Cache First für statische Assets (erst aus Cache liefern, bei Update dann aktualisieren) und Network First für dynamische Daten mit Fallback auf Cache. Konkret: Die HTML/JS/CSS der App wird einmal zwischengespeichert. Für die Aufgabenliste können wir einen Mechanismus vorsehen, der beim Online-Sein die neuesten Aufgaben aus Supabase lädt und lokal speichert (z.B. in IndexedDB). Im Offlinefall greift die App dann auf diese lokale Kopie der Aufgaben zurück. Moderne PWA-Konzepte nutzen hierfür teils Kombinationen aus Cache API und IndexedDB
+gomage.com
+ – der Cache speichert typischerweise HTTP-Antworten (für Dateien oder auch API-Antworten), während IndexedDB für strukturierte Daten gut geeignet ist. In unserem Fall könnte man z.B. alle Tasks und Kontakte einmal als JSON vom Server laden und in IndexedDB ablegen.
+
+Um Konflikte zu vermeiden, kann die App im Offline-Modus das Bearbeiten einschränken oder Änderungen lokal puffern. Eine spannende Web-API in diesem Zusammenhang ist der Background Sync: Damit kann man Aktionen, die offline erfolgt sind, im Hintergrund nachholen, sobald das Gerät wieder online geht
+yshtyagi.hashnode.dev
+. Beispielsweise könnte ein Nutzer offline eine Aufgabe abhaken – die App markiert sie sofort lokal als erledigt und merkt sich, dass diese Änderung noch an den Server gesendet werden muss. Sobald wieder Internet besteht, führt der Service Worker die Synchronisation mit Supabase durch (HTTP-Request nachträglich absenden). So bleibt die Datenbank konsistent, auch wenn während Offline-Zeit etwas erledigt wurde. In unserem Konzept erwähnen wir diesen Mechanismus als Option, falls umsetzbar – er erhöht die Robustheit der App bei Connectivity-Wechsel.
+
+Zusätzlich sorgt die PWA-Umsetzung dafür, dass man die App installieren kann (z.B. “Zum Home-Bildschirm hinzufügen” auf dem Smartphone). Ein Web App Manifest wird definiert mit Name, Icon, Start-URL etc., sodass die App beim Start ohne Browser-Chrome im Vollbild läuft. Damit fühlt sie sich wie eine native App an. Wie jede gute PWA wird unsere Anwendung auch eine Offline-Notfallseite haben können – falls doch etwas nicht im Cache ist – die dem Nutzer mitteilt, dass er offline ist, anstatt einfach einen Fehler zu zeigen
+web.dev
+ (z.B. "Sie sind offline. Aufgaben werden aus dem Zwischenspeicher geladen"). Im Idealfall merkt der Nutzer aber gar nicht, dass er offline ist, da alle benötigten Funktionen weiterhin verfügbar bleiben.
+
+Weitere Verbesserungs- und Komfortfunktionen
+
+Um die Organisation noch leichter zu machen, wurden bereits einige Features bedacht (Checklisten, Kontakte, Offline, etc.). Zusätzlich könnten folgende Ideen geprüft werden:
+
+Push-Benachrichtigungen: Die App könnte Push Notifications nutzen (via Service Worker), um Nutzer an wichtige Aufgaben zu erinnern. Beispiel: Eine Erinnerung am Abreisetag "Denke daran, Kühlschränke auszuschalten" oder wenn fast alle Tasks erledigt sind "Alle Tasks erledigt – gute Reise!". PWAs können Push-Notifications ähnlich nativen Apps nutzen, sofern der Nutzer die Erlaubnis erteilt
+medium.com
+.
+
+Terminfunktion / Kalender: Für zeitkritische Aufgaben könnte man eine Terminzeit angeben und die App integriert sich mit dem Gerätekalender oder setzt lokale Erinnerungen.
+
+Wiederverwendbare Checklisten-Vorlagen: Da viele Aufgaben bei jeder Reise gleich bleiben, bietet die App faktisch eine Vorlage pro Szenario. Es könnte eine Funktion geben "Checkliste zurücksetzen und neu starten" (was wir ja haben). Ebenso könnte man erlauben, eine ganze Checkliste zu duplizieren oder eine neue zu erstellen, falls weitere Reiseziele oder Häuser hinzukommen.
+
+Export/Backup: Eine Möglichkeit, die gesamten Listen und Kontakte als PDF oder CSV zu exportieren, wäre nützlich für die Dokumentation oder zum Ausdrucken einer Hardcopy.
+
+Mehrsprachigkeit: Aktuell ist die App auf Deutsch geplant (was für den internen Gebrauch völlig ausreicht). Falls jedoch mal Gäste oder andere Personen mit anderer Sprache beteiligt sind, könnte eine englische Version hilfreich sein. Supabase könnte die Texte mehrsprachig speichern, oder man nutzt Übersetzungsdateien im Frontend.
+
+UI/UX Aspekte: Eine ansprechende Gestaltung (klar lesbare Schrift, große Touch-Flächen für Checkboxen, vielleicht farbliche Markierungen für Kategorien) erhöht die Benutzerfreundlichkeit. Auch eine dunkle Modus für Nachtabfahrten etc. könnte man bedenken.
+
+Security: Obwohl alle Nutzer alles dürfen, sollte die App dennoch sicher entwickelt werden. Supabase regelt den Zugang per Auth – man sollte zusätzlich Row-Level Security (RLS) in Supabase so konfigurieren, dass nur authentifizierte Nutzer die Tabellen lesen/schreiben dürfen (alle Auth-User gleichberechtigt). Außerdem sollte die Verbindung über HTTPS erfolgen (standard bei Vercel), und sensible Daten (Passwörter, Tokens) nie im Klartext gespeichert werden.
+
+Performance: Da wahrscheinlich nur eine begrenzte Datenmenge vorhanden ist (ein paar Dutzend Aufgaben, ein paar Kontakte), ist Performance unkritisch. Dennoch stellen wir sicher, dass die App schnell lädt: Vercel/Next.js kann die Seite statisch optimieren, Supabase liefert Daten flott aus der Cloud, und dank Caching sind Wiederholungsaufrufe sehr zügig. Ein Start im Offline-Modus geht blitzschnell, da aus dem Cache geladen wird.
