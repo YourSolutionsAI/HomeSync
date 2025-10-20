@@ -76,11 +76,10 @@ AND type = 'Vor Ort';
 -- ============================================
 
 -- Zeige alle Kategorien nach Migration (getrennt nach Typ)
-SELECT type, category, COUNT(*) as anzahl_aufgaben
-FROM tasks
-GROUP BY type, category
-ORDER BY 
-  type,
+SELECT 
+  type, 
+  category, 
+  COUNT(*) as anzahl_aufgaben,
   CASE 
     -- REISE Kategorien
     WHEN category = 'Spezielles' AND type = 'Reise' THEN 1
@@ -101,7 +100,10 @@ ORDER BY
     WHEN category = 'Reparaturen' THEN 17
     WHEN category = 'Sicherheit' AND type = 'Vor Ort' THEN 18
     ELSE 99
-  END;
+  END as sortierung
+FROM tasks
+GROUP BY type, category
+ORDER BY type, sortierung;
 
 -- Erwartete Kategorien für REISE (type = 'Reise'):
 -- Spezielles
