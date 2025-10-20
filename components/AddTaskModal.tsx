@@ -13,7 +13,7 @@ interface AddTaskModalProps {
 // Kategorien für REISE-Szenarien
 const CATEGORIES_REISE = [
   'Spezielles',
-  'Vorbereitung Abreisehaus',
+  'Vor der Abreise',
   'Am Abreisetag',
   'Hausverwaltung',
   'Haus verschließen',
@@ -74,7 +74,7 @@ const getSubcategoriesReise = (category: string, location: 'Benissa' | 'Niederla
   switch (category) {
     case 'Spezielles':
       return ['Allgemein', 'Wichtige Informationen'];
-    case 'Vorbereitung Abreisehaus':
+    case 'Vor der Abreise':
     case 'Am Abreisetag':
       return rooms; // Gleiche Räume für beide Kategorien
     case 'Hausverwaltung':

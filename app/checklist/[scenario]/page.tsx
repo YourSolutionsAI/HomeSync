@@ -179,7 +179,7 @@ export default function ChecklistPage() {
   
   const CATEGORY_ORDER_REISE = [
     'Spezielles',
-    'Vorbereitung Abreisehaus',
+    'Vor der Abreise',
     'Am Abreisetag',
     'Hausverwaltung',
     'Haus verschließen',
@@ -247,7 +247,7 @@ export default function ChecklistPage() {
     } else {
       // REISE Unterkategorien
       switch (category) {
-        case 'Vorbereitung Abreisehaus':
+        case 'Vor der Abreise':
         case 'Am Abreisetag':
           return rooms; // Gleiche Räume für beide
         case 'Hausverwaltung':

@@ -14,9 +14,9 @@ Für "Reise Niederlauterbach → Benissa" und "Reise Benissa → Niederlauterbac
    - Wichtige Informationen
    - Besondere Hinweise (z.B. Schlüsselverwaltung)
 
-2. **Vorbereitung Abreisehaus**
+2. **Vor der Abreise**
    - Aufgaben, die 1-2 Tage vor Abreise erledigt werden können
-   - Unterkategorien: Schlafzimmer, Büro, Gäste Apartment, Küche, Hauswirtschaftsraum, Garage, Wohnzimmer, Badezimmer, Außenbereich
+   - Unterkategorien: Alle Räume der jeweiligen Location
 
 3. **Am Abreisetag**
    - Aufgaben, die direkt vor dem Verschließen des Hauses erledigt werden müssen
@@ -89,7 +89,8 @@ Für "Vor Ort in Niederlauterbach" und "Vor Ort in Benissa"
 Falls Sie bereits Aufgaben mit alten Kategorien haben:
 
 ### Für REISE-Aufgaben:
-- `Vorbereitungen zuhause (Packen)` → `Vorbereitung Abreisehaus`
+- `Vorbereitungen zuhause (Packen)` → `Vor der Abreise`
+- `Vorbereitung Abreisehaus` → `Vor der Abreise`
 - `Sonstiges` → `Spezielles`
 
 ### Für VOR ORT-Aufgaben:
@@ -128,7 +129,7 @@ Falls Sie bereits Aufgaben mit alten Kategorien haben:
 ### REISE-Aufgabe:
 ```
 Titel: Kühlschrank ausräumen
-Kategorie: Vorbereitung Abreisehaus
+Kategorie: Vor der Abreise
 Unterkategorie: Küche
 Typ: Reise
 ```

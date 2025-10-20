@@ -5,16 +5,22 @@
 -- KATEGORIE-MIGRATION FÜR REISE-AUFGABEN
 -- ============================================
 
--- "Vorbereitungen zuhause (Packen)" → "Vorbereitung Abreisehaus" (für Reise-Tasks)
+-- "Vorbereitungen zuhause (Packen)" → "Vor der Abreise" (für Reise-Tasks)
 UPDATE tasks 
-SET category = 'Vorbereitung Abreisehaus'
+SET category = 'Vor der Abreise'
 WHERE category = 'Vorbereitungen zuhause (Packen)'
+AND type = 'Reise';
+
+-- "Vorbereitung Abreisehaus" → "Vor der Abreise" (für Reise-Tasks)
+UPDATE tasks 
+SET category = 'Vor der Abreise'
+WHERE category = 'Vorbereitung Abreisehaus'
 AND type = 'Reise';
 
 -- Falls Sie einige als "Am Abreisetag" markieren möchten (Beispiele):
 -- UPDATE tasks 
 -- SET category = 'Am Abreisetag'
--- WHERE category = 'Vorbereitung Abreisehaus' 
+-- WHERE category = 'Vor der Abreise' 
 -- AND type = 'Reise'
 -- AND title IN ('Müll leeren und mitnehmen', 'Geschirr spülen', 'Kühlschrank leerräumen');
 
@@ -83,7 +89,7 @@ SELECT
   CASE 
     -- REISE Kategorien
     WHEN category = 'Spezielles' AND type = 'Reise' THEN 1
-    WHEN category = 'Vorbereitung Abreisehaus' THEN 2
+    WHEN category = 'Vor der Abreise' THEN 2
     WHEN category = 'Am Abreisetag' THEN 3
     WHEN category = 'Hausverwaltung' AND type = 'Reise' THEN 4
     WHEN category = 'Haus verschließen' THEN 5
@@ -107,7 +113,7 @@ ORDER BY type, sortierung;
 
 -- Erwartete Kategorien für REISE (type = 'Reise'):
 -- Spezielles
--- Vorbereitung Abreisehaus
+-- Vor der Abreise
 -- Am Abreisetag
 -- Hausverwaltung
 -- Haus verschließen
@@ -135,7 +141,7 @@ FROM tasks
 WHERE type = 'Reise'
 AND category NOT IN (
   'Spezielles',
-  'Vorbereitung Abreisehaus',
+  'Vor der Abreise',
   'Am Abreisetag',
   'Hausverwaltung',
   'Haus verschließen',
