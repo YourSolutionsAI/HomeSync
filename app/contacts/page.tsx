@@ -115,7 +115,7 @@ export default function ContactsPage() {
             {filteredContacts.length === 0 ? (
               <div className="card text-center py-12">
                 <p className="text-gray-500">
-                  Keine Kontakte gefunden. Fügen Sie Ihren ersten Kontakt hinzu!
+                  Keine Kontakte gefunden. Füge deinen ersten Kontakt hinzu!
                 </p>
               </div>
             ) : (

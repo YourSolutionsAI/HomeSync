@@ -1,4 +1,4 @@
-# 🧳 Reise Checkapp
+# 🧳 Reise Checkliste
 
 Eine Progressive Web App (PWA) für Reise-Checklisten zwischen zwei Ferienhäusern in Niederlauterbach (Frankreich) und Benissa (Spanien).
 

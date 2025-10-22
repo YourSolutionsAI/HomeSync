@@ -74,7 +74,7 @@ const getSubcategoriesReise = (category: string, location: 'Benissa' | 'Niederla
   
   switch (category) {
     case 'Spezielles':
-      return ['Allgemein', 'Wichtige Informationen'];
+      return ['Allgemein', 'Medikamente', 'Dokumente & Wertsachen', 'Schlüssel', 'Auto-Vorbereitung', 'Wichtige Informationen'];
     case 'Vor der Abreise':
     case 'Am Abreisetag':
       return rooms; // Gleiche Räume für beide Kategorien
@@ -552,7 +552,7 @@ export default function TaskDetailModal({
                   className="input"
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  Max. 20MB pro Bild, Formate: JPG, PNG, GIF, WebP. Sie können mehrere Dateien gleichzeitig auswählen.
+                  Max. 20MB pro Bild, Formate: JPG, PNG, GIF, WebP. Du kannst mehrere Dateien gleichzeitig auswählen.
                 </p>
               </div>
 
@@ -713,7 +713,7 @@ export default function TaskDetailModal({
         }}
         onConfirm={confirmDeleteImage}
         title="Bild löschen?"
-        message="Möchten Sie dieses Bild wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden."
+        message="Möchtest Du dieses Bild wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden."
         confirmText="Ja, löschen"
         cancelText="Abbrechen"
         type="danger"
@@ -725,7 +725,7 @@ export default function TaskDetailModal({
         onClose={() => setShowDeleteTaskModal(false)}
         onConfirm={confirmDeleteTask}
         title="Aufgabe löschen?"
-        message={`Möchten Sie die Aufgabe "${task.title}" wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.`}
+        message={`Möchtest Du die Aufgabe "${task.title}" wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.`}
         confirmText="Ja, löschen"
         cancelText="Abbrechen"
         type="danger"

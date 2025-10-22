@@ -23,7 +23,7 @@ Stellen Sie sicher, dass Ihr Code in einem Git-Repository ist:
 # Im Projektverzeichnis
 git init
 git add .
-git commit -m "Initial commit: Reise Checkapp"
+git commit -m "Initial commit: Reise Checkliste"
 git branch -M main
 git remote add origin https://github.com/IHR-BENUTZERNAME/papa-reise-checkapp.git
 git push -u origin main

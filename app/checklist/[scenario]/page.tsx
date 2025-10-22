@@ -123,7 +123,7 @@ export default function ChecklistPage() {
   };
 
   const handleReset = async () => {
-    if (!confirm('Möchten Sie die Checkliste wirklich zurücksetzen?')) {
+    if (!confirm('Möchtest Du die Checkliste wirklich zurücksetzen?')) {
       return;
     }
 
@@ -391,7 +391,7 @@ export default function ChecklistPage() {
                 🎉 Alle Aufgaben erledigt!
               </h2>
               <p className="text-green-700 mb-4">
-                Herzlichen Glückwunsch! Sie haben alle Aufgaben abgeschlossen. Gute
+                Herzlichen Glückwunsch! Du hast alle Aufgaben abgeschlossen. Gute
                 Reise!
               </p>
               <button onClick={handleReset} className="btn-primary">
@@ -542,7 +542,7 @@ export default function ChecklistPage() {
 
             {tasks.length === 0 && (
               <p className="text-gray-500 text-center py-8">
-                Keine Aufgaben vorhanden. Fügen Sie Ihre erste Aufgabe hinzu!
+                Keine Aufgaben vorhanden. Füge die erste Aufgabe hinzu!
               </p>
             )}
           </div>

@@ -75,7 +75,7 @@ export default function ContactModal({
   };
 
   const handleDelete = async () => {
-    if (!confirm('Möchten Sie diesen Kontakt wirklich löschen?')) {
+    if (!confirm('Möchtest Du diesen Kontakt wirklich löschen?')) {
       return;
     }
 

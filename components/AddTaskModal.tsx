@@ -73,7 +73,7 @@ const getSubcategoriesReise = (category: string, location: 'Benissa' | 'Niederla
   
   switch (category) {
     case 'Spezielles':
-      return ['Allgemein', 'Wichtige Informationen'];
+      return ['Allgemein', 'Medikamente', 'Dokumente & Wertsachen', 'Schlüssel', 'Auto-Vorbereitung', 'Wichtige Informationen'];
     case 'Vor der Abreise':
     case 'Am Abreisetag':
       return rooms; // Gleiche Räume für beide Kategorien
@@ -456,7 +456,7 @@ export default function AddTaskModal({
                 className="input"
               />
               <p className="text-xs text-gray-500 mt-1">
-                Max. 20MB pro Bild, Formate: JPG, PNG, GIF, WebP. Sie können mehrere Dateien gleichzeitig auswählen.
+                Max. 20MB pro Bild, Formate: JPG, PNG, GIF, WebP. Du kannst mehrere Dateien gleichzeitig auswählen.
               </p>
             </div>
 

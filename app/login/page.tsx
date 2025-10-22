@@ -29,7 +29,7 @@ export default function LoginPage() {
         await signIn(email, password);
       } else {
         await signUp(email, password);
-        alert('Registrierung erfolgreich! Bitte überprüfen Sie Ihre E-Mail zur Bestätigung.');
+        alert('Registrierung erfolgreich! Bitte überprüfe deine E-Mail zur Bestätigung.');
       }
       router.push('/');
     } catch (err: any) {

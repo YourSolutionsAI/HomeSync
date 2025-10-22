@@ -186,9 +186,8 @@ export default function HomePage() {
           <div className="card mt-8 bg-gray-50">
             <h3 className="text-lg font-semibold mb-2 text-gray-800">ℹ️ Hinweis</h3>
             <p className="text-gray-600 text-sm">
-              Wählen Sie ein Szenario aus, um die entsprechende Checkliste zu starten.
               Die App funktioniert auch offline - alle Änderungen werden automatisch
-              synchronisiert, sobald Sie wieder online sind.
+              synchronisiert, sobald Du wieder online bist.
             </p>
           </div>
         </div>
@@ -203,7 +202,7 @@ export default function HomePage() {
         }}
         onConfirm={handleResetConfirm}
         title="Checkliste zurücksetzen?"
-        message={`Möchten Sie die Checkliste "${SCENARIOS.find(s => s.id === scenarioToReset)?.title}" wirklich zurücksetzen? Alle erledigten Aufgaben werden als "nicht erledigt" markiert und die Checkliste wird aus den aktiven Listen entfernt.`}
+        message={`Möchtest Du die Checkliste "${SCENARIOS.find(s => s.id === scenarioToReset)?.title}" wirklich zurücksetzen? Alle erledigten Aufgaben werden als "nicht erledigt" markiert und die Checkliste wird aus den aktiven Listen entfernt.`}
         confirmText={resetting ? 'Wird zurückgesetzt...' : 'Ja, zurücksetzen'}
         cancelText="Abbrechen"
         type="warning"
