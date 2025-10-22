@@ -377,14 +377,14 @@ export default function TaskDetailModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="p-6">
-          <div className="flex justify-between items-start mb-4">
-            <h2 className="text-2xl font-bold text-gray-800">Aufgaben-Details</h2>
+    <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-slideUp">
+        <div className="p-8">
+          <div className="flex justify-between items-start mb-6">
+            <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Aufgaben-Details</h2>
             <button
               onClick={onClose}
-              className="text-gray-500 hover:text-gray-700 text-2xl"
+              className="text-gray-500 hover:text-gray-700 text-3xl transition-transform hover:scale-110 hover:rotate-90"
             >
               ×
             </button>
@@ -570,11 +570,11 @@ export default function TaskDetailModal({
                 />
               </div>
 
-              <div className="flex gap-2">
+              <div className="flex gap-3">
                 <button
                   onClick={handleSave}
                   disabled={saving || uploading || !formData.title}
-                  className="btn-primary flex-1"
+                  className="btn-primary flex-1 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                 >
                   {uploading
                     ? `Bilder werden hochgeladen... (${newImageFiles.length})`
@@ -688,7 +688,7 @@ export default function TaskDetailModal({
                 </div>
               )}
 
-              <div className="flex gap-2 pt-4 border-t">
+              <div className="flex gap-3 pt-6 border-t-2">
                 <button onClick={() => setEditing(true)} className="btn-primary flex-1">
                   Bearbeiten
                 </button>

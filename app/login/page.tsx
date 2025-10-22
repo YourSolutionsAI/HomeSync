@@ -40,20 +40,23 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 px-4">
-      <div className="card max-w-md w-full">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 px-4 py-12">
+      <div className="card max-w-md w-full fade-in">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">
-            🧳 Reise Checkliste
+          <div className="mb-4">
+            <span className="text-6xl animate-bounce">🧳</span>
+          </div>
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-3">
+            Reise Checkliste
           </h1>
-          <p className="text-gray-600">
-            {isLogin ? 'Anmelden' : 'Registrieren'}
+          <p className="text-gray-600 text-lg font-medium">
+            {isLogin ? 'Willkommen zurück!' : 'Neues Konto erstellen'}
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div className="space-y-2">
+            <label htmlFor="email" className="block text-sm font-semibold text-gray-700">
               E-Mail
             </label>
             <input
@@ -61,14 +64,14 @@ export default function LoginPage() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="input"
+              className="input bg-gray-50"
               placeholder="ihre-email@beispiel.de"
               required
             />
           </div>
 
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+          <div className="space-y-2">
+            <label htmlFor="password" className="block text-sm font-semibold text-gray-700">
               Passwort
             </label>
             <input
@@ -76,7 +79,7 @@ export default function LoginPage() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="input"
+              className="input bg-gray-50"
               placeholder="••••••••"
               required
               minLength={6}
@@ -84,20 +87,21 @@ export default function LoginPage() {
           </div>
 
           {error && (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-              {error}
+            <div className="bg-red-50 border-2 border-red-300 text-red-700 px-4 py-3 rounded-xl flex items-center gap-2 slide-up">
+              <span className="text-xl">⚠️</span>
+              <span className="font-medium">{error}</span>
             </div>
           )}
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
           >
             {loading ? (
-              <span className="flex items-center justify-center">
-                <div className="spinner w-5 h-5 border-2 mr-2"></div>
-                Laden...
+              <span className="flex items-center justify-center gap-2">
+                <div className="spinner w-5 h-5 border-2"></div>
+                Bitte warten...
               </span>
             ) : isLogin ? (
               'Anmelden'
@@ -107,14 +111,14 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <div className="mt-6 text-center">
+        <div className="mt-8 text-center">
           <button
             onClick={() => setIsLogin(!isLogin)}
-            className="text-blue-600 hover:underline text-sm"
+            className="text-blue-600 hover:text-blue-700 font-semibold text-sm transition-colors"
           >
             {isLogin
-              ? 'Noch kein Konto? Jetzt registrieren'
-              : 'Bereits registriert? Anmelden'}
+              ? 'Noch kein Konto? Jetzt registrieren →'
+              : '← Bereits registriert? Anmelden'}
           </button>
         </div>
       </div>
