@@ -397,7 +397,7 @@ export default function AddTaskModal({
               <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
                 Kategorie
               </label>
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center gap-2">
                 <select
                   value={formData.category}
                   onChange={(e) => handleCategoryChange(e.target.value)}
@@ -409,7 +409,7 @@ export default function AddTaskModal({
                     </option>
                   ))}
                 </select>
-                <button type="button" onClick={() => setIsAddingCategory(c => !c)} className="btn-secondary p-2 sm:p-2.5 leading-none aspect-square text-base sm:text-lg">+</button>
+                <button type="button" onClick={() => setIsAddingCategory(c => !c)} className="btn-secondary px-3 py-2.5 text-lg leading-none">+</button>
               </div>
               {isAddingCategory && (
                 <div className="mt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 animate-fadeIn">
@@ -418,13 +418,13 @@ export default function AddTaskModal({
                         value={newCategory}
                         onChange={(e) => setNewCategory(e.target.value)}
                         className="input flex-1 text-sm sm:text-base"
-                        placeholder="Neue Kategorie eingeben"
+                        placeholder="Neue Kategorie"
                         autoFocus
                     />
-                    <button type="button" onClick={handleAddCategory} className="btn-primary text-sm sm:text-base py-2 sm:py-3">
+                    <button type="button" onClick={handleAddCategory} className="btn-primary text-sm sm:text-base py-2">
                         Hinzufügen
                     </button>
-                    <button type="button" onClick={() => { setIsAddingCategory(false); setNewCategory(''); }} className="btn-secondary text-sm sm:text-base py-2 sm:py-3">
+                    <button type="button" onClick={() => { setIsAddingCategory(false); setNewCategory(''); }} className="btn-secondary text-sm sm:text-base py-2">
                         Abbrechen
                     </button>
                 </div>
@@ -439,7 +439,7 @@ export default function AddTaskModal({
                   <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
                     Unterkategorie
                   </label>
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center gap-2">
                     <select
                       value={formData.subcategory}
                       onChange={(e) =>
@@ -453,7 +453,7 @@ export default function AddTaskModal({
                         </option>
                       ))}
                     </select>
-                    <button type="button" onClick={() => setIsAddingSubcategory(c => !c)} className="btn-secondary p-2 sm:p-2.5 leading-none aspect-square text-base sm:text-lg">+</button>
+                    <button type="button" onClick={() => setIsAddingSubcategory(c => !c)} className="btn-secondary px-3 py-2.5 text-lg leading-none">+</button>
                   </div>
                   {isAddingSubcategory && (
                     <div className="mt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 animate-fadeIn">
@@ -465,10 +465,10 @@ export default function AddTaskModal({
                             placeholder="Neue Unterkategorie"
                             autoFocus
                         />
-                        <button type="button" onClick={handleAddSubcategory} className="btn-primary text-sm sm:text-base py-2 sm:py-3">
+                        <button type="button" onClick={handleAddSubcategory} className="btn-primary text-sm sm:text-base py-2">
                             Hinzufügen
                         </button>
-                        <button type="button" onClick={() => { setIsAddingSubcategory(false); setNewSubcategory(''); }} className="btn-secondary text-sm sm:text-base py-2 sm:py-3">
+                        <button type="button" onClick={() => { setIsAddingSubcategory(false); setNewSubcategory(''); }} className="btn-secondary text-sm sm:text-base py-2">
                             Abbrechen
                         </button>
                     </div>
@@ -488,7 +488,7 @@ export default function AddTaskModal({
                 }
                 className="input text-sm sm:text-base"
                 rows={3}
-                placeholder="Weitere Details zur Aufgabe..."
+                placeholder="Details zur Aufgabe..."
               />
             </div>
 
@@ -503,10 +503,10 @@ export default function AddTaskModal({
                   setFormData({ ...formData, link: e.target.value })
                 }
                 className="input text-sm sm:text-base"
-                placeholder="beispiel.de oder https://beispiel.de"
+                placeholder="beispiel.de"
               />
               <p className="text-xs text-gray-500 mt-1">
-                💡 Tipp: https:// wird automatisch hinzugefügt
+                💡 https:// wird automatisch hinzugefügt
               </p>
             </div>
 
@@ -516,7 +516,7 @@ export default function AddTaskModal({
                 <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                   Ausgewählte Fotos ({imagePreviews.length})
                 </label>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
+                <div className="grid grid-cols-2 gap-2 sm:gap-3">
                   {imagePreviews.map((preview, index) => (
                     <div key={index} className="relative group">
                       <img
@@ -527,7 +527,7 @@ export default function AddTaskModal({
                       <button
                         type="button"
                         onClick={() => removeImage(index)}
-                        className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center hover:bg-red-700 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity text-sm sm:text-base"
+                        className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center hover:bg-red-700 opacity-90 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity text-sm"
                         title="Bild entfernen"
                       >
                         ×
@@ -541,17 +541,17 @@ export default function AddTaskModal({
             {/* Fotos hinzufügen */}
             <div>
               <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
-                Fotos hinzufügen (optional, mehrere möglich)
+                Fotos hinzufügen (optional)
               </label>
               <input
                 type="file"
                 accept="image/*"
                 multiple
                 onChange={handleImageChange}
-                className="input text-sm sm:text-base"
+                className="input text-xs sm:text-sm"
               />
               <p className="text-xs text-gray-500 mt-1">
-                Max. 20MB pro Bild, Formate: JPG, PNG, GIF, WebP. Du kannst mehrere Dateien gleichzeitig auswählen.
+                Max. 20MB pro Bild. Mehrere Dateien möglich.
               </p>
             </div>
 
@@ -577,7 +577,7 @@ export default function AddTaskModal({
                 className="btn-primary flex-1 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none text-sm sm:text-base py-2.5 sm:py-3"
               >
                 {uploading
-                  ? `Bilder werden hochgeladen... (${imageFiles.length})`
+                  ? `Hochladen... (${imageFiles.length})`
                   : saving
                   ? 'Speichern...'
                   : 'Aufgabe hinzufügen'}

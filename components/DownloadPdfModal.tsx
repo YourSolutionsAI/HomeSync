@@ -97,20 +97,20 @@ export default function DownloadPdfModal({
     <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4 animate-fadeIn">
       <div className="bg-white rounded-xl sm:rounded-2xl shadow-2xl max-w-2xl w-full max-h-[95vh] sm:max-h-[90vh] flex flex-col animate-slideUp">
         <div className="p-4 sm:p-6 md:p-8 border-b">
-          <div className="flex justify-between items-start">
-            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              Checklisten als PDF herunterladen
+          <div className="flex justify-between items-start gap-2">
+            <h2 className="text-lg sm:text-2xl md:text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              Checklisten als PDF
             </h2>
             <button
               onClick={onClose}
               disabled={isGenerating}
-              className="text-gray-500 hover:text-gray-700 text-2xl sm:text-3xl transition-transform hover:scale-110 hover:rotate-90 disabled:opacity-50 flex-shrink-0 ml-2"
+              className="text-gray-500 hover:text-gray-700 text-2xl sm:text-3xl transition-transform hover:scale-110 hover:rotate-90 disabled:opacity-50 flex-shrink-0"
               aria-label="Schließen"
             >
               ×
             </button>
           </div>
-          <p className="text-sm sm:text-base text-gray-600 mt-2">Wähle die Checklisten aus, die du als druckfertiges PDF exportieren möchtest.</p>
+          <p className="text-xs sm:text-sm text-gray-600 mt-2">Wähle die Checklisten aus, die du als PDF exportieren möchtest.</p>
         </div>
 
         <div className="p-4 sm:p-6 md:p-8 overflow-y-auto flex-1">
@@ -119,14 +119,14 @@ export default function DownloadPdfModal({
               <div
                 key={scenario.id}
                 onClick={() => handleToggleScenario(scenario.id)}
-                className={`flex items-center gap-3 sm:gap-4 p-3 sm:p-4 border-2 rounded-xl cursor-pointer transition-all ${
+                className={`flex items-center gap-2 sm:gap-4 p-3 sm:p-4 border-2 rounded-xl cursor-pointer transition-all ${
                   selectedScenarios.includes(scenario.id)
                     ? 'border-blue-500 bg-blue-50'
                     : 'border-gray-200 hover:border-blue-300'
                 }`}
               >
                 <div
-                  className={`w-5 h-5 sm:w-6 sm:h-6 rounded-md flex-shrink-0 flex items-center justify-center border-2 ${
+                  className={`w-5 h-5 sm:w-6 sm:h-6 rounded-md flex-shrink-0 flex items-center justify-center border-2 text-xs sm:text-sm ${
                     selectedScenarios.includes(scenario.id)
                       ? 'bg-blue-600 border-blue-600 text-white'
                       : 'border-gray-400'
@@ -135,9 +135,9 @@ export default function DownloadPdfModal({
                   {selectedScenarios.includes(scenario.id) && '✓'}
                 </div>
                 <span className="text-2xl sm:text-3xl">{scenario.icon}</span>
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-bold text-gray-800 text-sm sm:text-base">{scenario.title}</h3>
-                  <p className="text-xs sm:text-sm text-gray-500">{scenario.description}</p>
+                <div className="min-w-0">
+                  <h3 className="text-sm sm:text-base font-bold text-gray-800 truncate">{scenario.title}</h3>
+                  <p className="text-xs sm:text-sm text-gray-500 line-clamp-2">{scenario.description}</p>
                 </div>
               </div>
             ))}
@@ -147,16 +147,16 @@ export default function DownloadPdfModal({
         <div className="p-4 sm:p-6 md:p-8 border-t bg-gray-50 rounded-b-xl sm:rounded-b-2xl">
           {isGenerating ? (
             <div className="text-center">
-              <p className="font-semibold text-blue-700 text-sm sm:text-base">PDFs werden erstellt...</p>
+              <p className="text-sm sm:text-base font-semibold text-blue-700">PDFs werden erstellt...</p>
               <p className="text-xs sm:text-sm text-gray-600 mt-1">
-                ({progress.current} / {progress.total}) {SCENARIOS.find(s => s.id === selectedScenarios[progress.current - 1])?.title}
+                ({progress.current} / {progress.total})
               </p>
               <div className="w-full bg-gray-200 rounded-full h-2 sm:h-2.5 mt-2">
-                <div className="bg-blue-600 h-2 sm:h-2.5 rounded-full" style={{ width: `${(progress.current / progress.total) * 100}%` }}></div>
+                <div className="bg-blue-600 h-2 sm:h-2.5 rounded-full transition-all" style={{ width: `${(progress.current / progress.total) * 100}%` }}></div>
               </div>
             </div>
           ) : (
-            <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
+            <div className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-4">
               <button
                 onClick={onClose}
                 className="btn-secondary flex-1 text-sm sm:text-base py-2.5 sm:py-3"
@@ -168,7 +168,7 @@ export default function DownloadPdfModal({
                 disabled={selectedScenarios.length === 0}
                 className="btn-primary flex-1 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base py-2.5 sm:py-3"
               >
-                {selectedScenarios.length} Liste{selectedScenarios.length !== 1 && 'n'} herunterladen
+                {selectedScenarios.length} Liste{selectedScenarios.length !== 1 && 'n'} laden
               </button>
             </div>
           )}

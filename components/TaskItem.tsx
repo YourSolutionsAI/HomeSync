@@ -17,7 +17,7 @@ export default function TaskItem({ task, onToggle, onDetail }: TaskItemProps) {
 
   return (
     <div 
-      className={`flex items-start gap-2 sm:gap-3 md:gap-4 p-3 sm:p-4 bg-white rounded-lg sm:rounded-xl border-2 transition-all cursor-pointer transform hover:scale-[1.01] ${
+      className={`flex items-start gap-2 sm:gap-3 md:gap-4 p-3 sm:p-3.5 md:p-4 bg-white rounded-lg sm:rounded-xl border-2 transition-all cursor-pointer transform hover:scale-[1.01] active:scale-[0.99] ${
         task.done 
           ? 'border-green-300 bg-green-50' 
           : 'border-gray-200 hover:border-blue-400 hover:shadow-lg'
@@ -39,20 +39,20 @@ export default function TaskItem({ task, onToggle, onDetail }: TaskItemProps) {
 
       <div className="flex-1 min-w-0">
         <h4
-          className={`text-base sm:text-lg font-semibold text-gray-900 ${task.done ? 'line-through text-gray-500' : ''}`}
+          className={`text-sm sm:text-base md:text-lg font-semibold text-gray-900 ${task.done ? 'line-through text-gray-500' : ''}`}
         >
           {task.title}
         </h4>
         {task.description && (
-          <p className={`text-xs sm:text-sm text-gray-600 mt-1 sm:mt-2 line-clamp-2 leading-relaxed ${task.done ? 'text-gray-400' : ''}`}>
+          <p className={`text-xs sm:text-sm text-gray-600 mt-1 sm:mt-1.5 md:mt-2 line-clamp-2 leading-relaxed ${task.done ? 'text-gray-400' : ''}`}>
             {task.description}
           </p>
         )}
         {(task.link || task.image_url || task.notes) && (
-          <div className="flex flex-wrap gap-1.5 sm:gap-2 md:gap-3 mt-2 sm:mt-3">
-            {task.link && <span className="flex items-center gap-1 bg-blue-50 text-blue-700 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-lg font-medium text-xs sm:text-sm">🔗 Link</span>}
-            {task.image_url && <span className="flex items-center gap-1 bg-purple-50 text-purple-700 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-lg font-medium text-xs sm:text-sm">📷 Foto</span>}
-            {task.notes && <span className="flex items-center gap-1 bg-gray-100 text-gray-700 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-lg font-medium text-xs sm:text-sm">📝 Notizen</span>}
+          <div className="flex gap-1.5 sm:gap-2 md:gap-3 mt-2 sm:mt-2.5 md:mt-3 text-xs sm:text-sm flex-wrap">
+            {task.link && <span className="flex items-center gap-0.5 sm:gap-1 bg-blue-50 text-blue-700 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md sm:rounded-lg font-medium">🔗 Link</span>}
+            {task.image_url && <span className="flex items-center gap-0.5 sm:gap-1 bg-purple-50 text-purple-700 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md sm:rounded-lg font-medium">📷 Foto</span>}
+            {task.notes && <span className="flex items-center gap-0.5 sm:gap-1 bg-gray-100 text-gray-700 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md sm:rounded-lg font-medium">📝 Notizen</span>}
           </div>
         )}
       </div>
@@ -61,7 +61,7 @@ export default function TaskItem({ task, onToggle, onDetail }: TaskItemProps) {
       <Tooltip text="Details anzeigen, Notizen und Bilder bearbeiten" position="left">
         <button 
           onClick={handleDetailClick}
-          className="flex-shrink-0 p-1.5 sm:p-2 rounded-full hover:bg-gray-200 transition-colors"
+          className="flex-shrink-0 p-1.5 sm:p-2 rounded-full hover:bg-gray-200 active:bg-gray-300 transition-colors"
           aria-label="Task-Details anzeigen"
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 sm:h-6 sm:w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">

@@ -377,14 +377,14 @@ export default function TaskDetailModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 p-1 sm:p-2 md:p-4 animate-fadeIn">
-      <div className="bg-white rounded-lg sm:rounded-xl md:rounded-2xl shadow-2xl max-w-full sm:max-w-lg md:max-w-2xl w-full max-h-[98vh] sm:max-h-[95vh] md:max-h-[90vh] overflow-y-auto animate-slideUp mx-1 sm:mx-2">
-        <div className="p-3 sm:p-4 md:p-6 lg:p-8">
-          <div className="flex justify-between items-start mb-3 sm:mb-4 md:mb-6">
-            <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent pr-2">Aufgaben-Details</h2>
+    <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4 animate-fadeIn">
+      <div className="bg-white rounded-xl sm:rounded-2xl shadow-2xl max-w-2xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto animate-slideUp">
+        <div className="p-4 sm:p-6 md:p-8">
+          <div className="flex justify-between items-start mb-4 sm:mb-6">
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Aufgaben-Details</h2>
             <button
               onClick={onClose}
-              className="text-gray-500 hover:text-gray-700 text-xl sm:text-2xl md:text-3xl transition-transform hover:scale-110 hover:rotate-90 flex-shrink-0 ml-1"
+              className="text-gray-500 hover:text-gray-700 text-2xl sm:text-3xl transition-transform hover:scale-110 hover:rotate-90 flex-shrink-0 ml-2"
               aria-label="Schließen"
             >
               ×
@@ -392,9 +392,9 @@ export default function TaskDetailModal({
           </div>
 
           {editing ? (
-            <div className="space-y-2.5 sm:space-y-3 md:space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               <div>
-                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-0.5 sm:mb-1">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
                   Titel *
                 </label>
                 <input
@@ -403,19 +403,19 @@ export default function TaskDetailModal({
                   onChange={(e) =>
                     setFormData({ ...formData, title: e.target.value })
                   }
-                  className="input text-sm sm:text-base py-2 sm:py-3"
+                  className="input text-sm sm:text-base"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-0.5 sm:mb-1">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
                   Kategorie
                 </label>
                 <select
                   value={formData.category}
                   onChange={(e) => handleCategoryChange(e.target.value)}
-                  className="input text-sm sm:text-base py-2 sm:py-3"
+                  className="input text-sm sm:text-base"
                 >
                   {CATEGORIES.map((cat) => (
                     <option key={cat} value={cat}>
@@ -429,7 +429,7 @@ export default function TaskDetailModal({
                 const subcategories = getSubcategories(formData.category);
                 return subcategories.length > 1 && (
                   <div>
-                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-0.5 sm:mb-1">
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
                       Unterkategorie
                     </label>
                     <select
@@ -437,7 +437,7 @@ export default function TaskDetailModal({
                       onChange={(e) =>
                         setFormData({ ...formData, subcategory: e.target.value })
                       }
-                      className="input text-sm sm:text-base py-2 sm:py-3"
+                      className="input text-sm sm:text-base"
                     >
                       {subcategories.map((subcat) => (
                         <option key={subcat} value={subcat}>
@@ -450,7 +450,7 @@ export default function TaskDetailModal({
               })()}
 
               <div>
-                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-0.5 sm:mb-1">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
                   Beschreibung
                 </label>
                 <textarea
@@ -458,13 +458,13 @@ export default function TaskDetailModal({
                   onChange={(e) =>
                     setFormData({ ...formData, description: e.target.value })
                   }
-                  className="input text-sm sm:text-base py-2 sm:py-3"
-                  rows={2}
+                  className="input text-sm sm:text-base"
+                  rows={3}
                 />
               </div>
 
               <div>
-                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-0.5 sm:mb-1">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
                   Link
                 </label>
                 <input
@@ -473,32 +473,32 @@ export default function TaskDetailModal({
                   onChange={(e) =>
                     setFormData({ ...formData, link: e.target.value })
                   }
-                  className="input text-sm sm:text-base py-2 sm:py-3"
-                  placeholder="beispiel.de oder https://beispiel.de"
+                  className="input text-sm sm:text-base"
+                  placeholder="beispiel.de"
                 />
-                <p className="text-xs text-gray-500 mt-0.5">
-                  💡 Tipp: https:// wird automatisch hinzugefügt
+                <p className="text-xs text-gray-500 mt-1">
+                  💡 https:// wird automatisch hinzugefügt
                 </p>
               </div>
 
               {/* Vorhandene Bilder */}
               {existingImages.length > 0 && (
                 <div>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                     Vorhandene Fotos ({existingImages.length})
                   </label>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 sm:gap-2 md:gap-3">
+                  <div className="grid grid-cols-2 gap-2 sm:gap-3">
                     {existingImages.map((imageUrl, index) => (
                       <div key={index} className="relative group">
                         <img
                           src={imageUrl}
                           alt={`Bild ${index + 1}`}
-                          className="w-full h-20 sm:h-24 md:h-32 object-cover rounded-lg border border-gray-200"
+                          className="w-full h-24 sm:h-32 object-cover rounded-lg border border-gray-200"
                         />
                         <button
                           type="button"
                           onClick={() => removeExistingImage(imageUrl)}
-                          className="absolute top-0.5 right-0.5 sm:top-1 sm:right-1 bg-red-600 text-white rounded-full w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 flex items-center justify-center hover:bg-red-700 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity text-xs sm:text-sm md:text-base"
+                          className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center hover:bg-red-700 opacity-90 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity text-sm"
                           title="Bild löschen"
                         >
                           ×
@@ -512,26 +512,26 @@ export default function TaskDetailModal({
               {/* Neue Bilder Vorschau */}
               {newImagePreviews.length > 0 && (
                 <div>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                     Neue Fotos ({newImagePreviews.length})
                   </label>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 sm:gap-2 md:gap-3">
+                  <div className="grid grid-cols-2 gap-2 sm:gap-3">
                     {newImagePreviews.map((preview, index) => (
                       <div key={index} className="relative group">
                         <img
                           src={preview}
                           alt={`Vorschau ${index + 1}`}
-                          className="w-full h-20 sm:h-24 md:h-32 object-cover rounded-lg border border-blue-300"
+                          className="w-full h-24 sm:h-32 object-cover rounded-lg border border-blue-300"
                         />
                         <button
                           type="button"
                           onClick={() => removeNewImage(index)}
-                          className="absolute top-0.5 right-0.5 sm:top-1 sm:right-1 bg-red-600 text-white rounded-full w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 flex items-center justify-center hover:bg-red-700 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity text-xs sm:text-sm md:text-base"
+                          className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center hover:bg-red-700 opacity-90 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity text-sm"
                           title="Bild entfernen"
                         >
                           ×
                         </button>
-                        <span className="absolute bottom-0.5 left-0.5 sm:bottom-1 sm:left-1 bg-blue-600 text-white text-xs px-1 sm:px-1.5 md:px-2 py-0.5 rounded">
+                        <span className="absolute bottom-1 left-1 bg-blue-600 text-white text-xs px-1.5 sm:px-2 py-0.5 rounded">
                           Neu
                         </span>
                       </div>
@@ -542,7 +542,7 @@ export default function TaskDetailModal({
 
               {/* Foto hinzufügen */}
               <div>
-                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-0.5 sm:mb-1">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
                   Fotos hinzufügen (mehrere möglich)
                 </label>
                 <input
@@ -550,15 +550,15 @@ export default function TaskDetailModal({
                   accept="image/*"
                   multiple
                   onChange={handleImageChange}
-                  className="input text-sm sm:text-base py-2 sm:py-3"
+                  className="input text-xs sm:text-sm"
                 />
-                <p className="text-xs text-gray-500 mt-0.5">
-                  Max. 20MB pro Bild, Formate: JPG, PNG, GIF, WebP. Du kannst mehrere Dateien gleichzeitig auswählen.
+                <p className="text-xs text-gray-500 mt-1">
+                  Max. 20MB pro Bild. Mehrere Dateien möglich.
                 </p>
               </div>
 
               <div>
-                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-0.5 sm:mb-1">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
                   Notizen
                 </label>
                 <textarea
@@ -566,19 +566,19 @@ export default function TaskDetailModal({
                   onChange={(e) =>
                     setFormData({ ...formData, notes: e.target.value })
                   }
-                  className="input text-sm sm:text-base py-2 sm:py-3"
-                  rows={2}
+                  className="input text-sm sm:text-base"
+                  rows={3}
                 />
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-2 pt-3 sm:pt-4 md:pt-6 border-t-2">
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-2">
                 <button
                   onClick={handleSave}
                   disabled={saving || uploading || !formData.title}
-                  className="btn-primary flex-1 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none text-xs sm:text-sm md:text-base py-2 sm:py-2.5 md:py-3"
+                  className="btn-primary flex-1 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none text-sm sm:text-base py-2.5 sm:py-3"
                 >
                   {uploading
-                    ? `Bilder werden hochgeladen... (${newImageFiles.length})`
+                    ? `Hochladen... (${newImageFiles.length})`
                     : saving
                     ? 'Speichern...'
                     : 'Speichern'}
@@ -595,29 +595,29 @@ export default function TaskDetailModal({
                       setExistingImages([task.image_url]);
                     }
                   }}
-                  className="btn-secondary flex-1 text-xs sm:text-sm md:text-base py-2 sm:py-2.5 md:py-3"
+                  className="btn-secondary flex-1 text-sm sm:text-base py-2.5 sm:py-3"
                 >
                   Abbrechen
                 </button>
               </div>
             </div>
           ) : (
-            <div className="space-y-2.5 sm:space-y-3 md:space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               <div>
-                <h3 className="text-base sm:text-lg md:text-xl font-semibold text-gray-800">
+                <h3 className="text-lg sm:text-xl font-semibold text-gray-800">
                   {task.title}
                 </h3>
-                <div className="flex gap-1.5 sm:gap-2 mt-1.5 sm:mt-2 flex-wrap">
-                  <span className="text-xs sm:text-sm bg-blue-100 text-blue-800 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded">
+                <div className="flex gap-1.5 sm:gap-2 mt-2 flex-wrap">
+                  <span className="text-xs sm:text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded">
                     {task.category}
                   </span>
                   {task.subcategory && task.subcategory !== 'Allgemein' && (
-                    <span className="text-xs sm:text-sm bg-gray-100 text-gray-700 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded">
+                    <span className="text-xs sm:text-sm bg-gray-100 text-gray-700 px-2 py-1 rounded">
                       {task.subcategory}
                     </span>
                   )}
                   <span
-                    className={`text-xs sm:text-sm px-1.5 sm:px-2 py-0.5 sm:py-1 rounded ${
+                    className={`text-xs sm:text-sm px-2 py-1 rounded ${
                       task.done
                         ? 'bg-green-100 text-green-800'
                         : 'bg-gray-100 text-gray-800'
@@ -630,10 +630,10 @@ export default function TaskDetailModal({
 
               {task.description && (
                 <div>
-                  <h4 className="text-xs sm:text-sm md:text-base font-semibold text-gray-700 mb-0.5 sm:mb-1">
+                  <h4 className="text-sm sm:text-base font-semibold text-gray-700 mb-1">
                     Beschreibung
                   </h4>
-                  <p className="text-xs sm:text-sm md:text-base text-gray-600 whitespace-pre-wrap">
+                  <p className="text-sm sm:text-base text-gray-600 whitespace-pre-wrap">
                     {task.description}
                   </p>
                 </div>
@@ -641,12 +641,12 @@ export default function TaskDetailModal({
 
               {task.link && (
                 <div>
-                  <h4 className="text-xs sm:text-sm md:text-base font-semibold text-gray-700 mb-0.5 sm:mb-1">Link</h4>
+                  <h4 className="text-sm sm:text-base font-semibold text-gray-700 mb-1">Link</h4>
                   <a
                     href={task.link}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-xs sm:text-sm md:text-base text-blue-600 hover:underline break-all"
+                    className="text-sm sm:text-base text-blue-600 hover:underline break-all"
                   >
                     🔗 {task.link}
                   </a>
@@ -656,12 +656,12 @@ export default function TaskDetailModal({
               {/* Anzeige aller Bilder */}
               {existingImages.length > 0 && (
                 <div>
-                  <h4 className="text-xs sm:text-sm md:text-base font-semibold text-gray-700 mb-1.5 sm:mb-2">
+                  <h4 className="text-sm sm:text-base font-semibold text-gray-700 mb-2">
                     Fotos ({existingImages.length})
                   </h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 sm:gap-2 md:gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
                     {existingImages.map((imageUrl, index) => (
-                      <div key={index} className="mt-1 sm:mt-2">
+                      <div key={index}>
                         <img
                           src={imageUrl}
                           alt={`${task.title} - Bild ${index + 1}`}
@@ -671,8 +671,8 @@ export default function TaskDetailModal({
                             const target = e.target as HTMLImageElement;
                             target.style.display = 'none';
                             const errorDiv = document.createElement('div');
-                            errorDiv.className = 'p-2 sm:p-3 md:p-4 bg-red-50 border border-red-200 rounded-lg text-xs sm:text-sm text-red-700';
-                            errorDiv.innerHTML = '⚠️ Bild konnte nicht geladen werden.<br/>URL: <span class="text-xs break-all">' + imageUrl + '</span>';
+                            errorDiv.className = 'p-3 bg-red-50 border border-red-200 rounded-lg text-xs sm:text-sm text-red-700';
+                            errorDiv.innerHTML = '⚠️ Bild konnte nicht geladen werden.';
                             target.parentElement?.appendChild(errorDiv);
                           }}
                         />
@@ -684,19 +684,19 @@ export default function TaskDetailModal({
 
               {task.notes && (
                 <div>
-                  <h4 className="text-xs sm:text-sm md:text-base font-semibold text-gray-700 mb-0.5 sm:mb-1">Notizen</h4>
-                  <p className="text-xs sm:text-sm md:text-base text-gray-600 whitespace-pre-wrap">{task.notes}</p>
+                  <h4 className="text-sm sm:text-base font-semibold text-gray-700 mb-1">Notizen</h4>
+                  <p className="text-sm sm:text-base text-gray-600 whitespace-pre-wrap">{task.notes}</p>
                 </div>
               )}
 
-              <div className="flex flex-col sm:flex-row gap-2 pt-3 sm:pt-4 md:pt-6 border-t-2">
-                <button onClick={() => setEditing(true)} className="btn-primary flex-1 text-xs sm:text-sm md:text-base py-2 sm:py-2.5 md:py-3">
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-4 sm:pt-6 border-t-2">
+                <button onClick={() => setEditing(true)} className="btn-primary flex-1 text-sm sm:text-base py-2.5 sm:py-3">
                   Bearbeiten
                 </button>
-                <button onClick={handleDeleteClick} className="btn-danger flex-1 text-xs sm:text-sm md:text-base py-2 sm:py-2.5 md:py-3">
+                <button onClick={handleDeleteClick} className="btn-danger flex-1 text-sm sm:text-base py-2.5 sm:py-3">
                   Löschen
                 </button>
-                <button onClick={onClose} className="btn-secondary flex-1 text-xs sm:text-sm md:text-base py-2 sm:py-2.5 md:py-3">
+                <button onClick={onClose} className="btn-secondary flex-1 text-sm sm:text-base py-2.5 sm:py-3">
                   Schließen
                 </button>
               </div>

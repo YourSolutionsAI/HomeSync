@@ -8,7 +8,6 @@ Eine Progressive Web App (PWA) für Reise-Checklisten zwischen zwei Ferienhäuse
 - 🔄 **Offline-Funktionalität**: Funktioniert auch ohne Internetverbindung
 - ✅ **Interaktive Checklisten**: Abhaken von Aufgaben mit Fortschrittsanzeige
 - 📝 **Aufgabenverwaltung**: Hinzufügen, Bearbeiten und Löschen von Aufgaben
-- 📞 **Kontaktverwaltung**: Wichtige Kontakte pro Standort hinterlegen
 - 🔐 **Sicherer Login**: Authentifizierung über Supabase
 - 🌐 **Realtime-Sync**: Änderungen werden automatisch synchronisiert
 - 🎨 **Modernes UI**: Responsive Design mit Tailwind CSS
@@ -80,7 +79,6 @@ Folgen Sie der detaillierten Anleitung in [VERCEL_SETUP.md](./VERCEL_SETUP.md).
 papa-reise-checkapp/
 ├── app/                      # Next.js App Router
 │   ├── checklist/           # Checklisten-Seiten
-│   ├── contacts/            # Kontaktverwaltung
 │   ├── login/               # Login-Seite
 │   ├── layout.tsx           # Root Layout
 │   ├── page.tsx             # Startseite
@@ -88,7 +86,6 @@ papa-reise-checkapp/
 ├── components/              # React Komponenten
 │   ├── AddTaskModal.tsx     # Modal zum Hinzufügen von Aufgaben
 │   ├── AuthGuard.tsx        # Authentifizierungs-Guard
-│   ├── ContactModal.tsx     # Modal für Kontakte
 │   ├── TaskDetailModal.tsx  # Modal für Aufgaben-Details
 │   └── TaskItem.tsx         # Aufgaben-Listeneintrag
 ├── contexts/                # React Contexts
@@ -164,7 +161,6 @@ Siehe [SUPABASE_SETUP.md](./SUPABASE_SETUP.md) für das vollständige SQL-Schema
 
 Haupttabellen:
 - **tasks**: Alle Aufgaben mit Kategorien, Beschreibungen, Links, etc.
-- **contacts**: Wichtige Kontakte pro Standort
 
 ## 🔐 Sicherheit
 
@@ -178,7 +174,7 @@ Haupttabellen:
 Die App nutzt mehrere Strategien für Offline-Betrieb:
 
 1. **Service Worker**: Cached statische Assets (HTML, CSS, JS)
-2. **IndexedDB**: Speichert Aufgaben und Kontakte lokal
+2. **IndexedDB**: Speichert Aufgaben lokal
 3. **Sync Queue**: Speichert Änderungen offline und synct bei Online-Verbindung
 4. **Network First mit Fallback**: Versucht Online-Daten zu laden, fällt auf Cache zurück
 

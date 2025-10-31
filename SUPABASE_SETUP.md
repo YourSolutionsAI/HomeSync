@@ -40,24 +40,10 @@ CREATE TABLE tasks (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- Create Contacts Table
-CREATE TABLE contacts (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  name TEXT NOT NULL,
-  role TEXT NOT NULL,
-  location TEXT NOT NULL CHECK (location IN ('Niederlauterbach', 'Benissa')),
-  phone TEXT,
-  email TEXT,
-  address TEXT,
-  notes TEXT,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
-);
-
 -- Create indexes for better performance
 CREATE INDEX idx_tasks_scenario ON tasks(scenario);
 CREATE INDEX idx_tasks_location ON tasks(location);
 CREATE INDEX idx_tasks_order ON tasks("order");
-CREATE INDEX idx_contacts_location ON contacts(location);
 
 -- Function to update updated_at timestamp
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -74,7 +60,6 @@ FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- Enable Row Level Security (RLS)
 ALTER TABLE tasks ENABLE ROW LEVEL SECURITY;
-ALTER TABLE contacts ENABLE ROW LEVEL SECURITY;
 
 -- Create policies for authenticated users
 -- Tasks policies
@@ -95,27 +80,6 @@ USING (true);
 
 CREATE POLICY "Authenticated users can delete tasks" 
 ON tasks FOR DELETE 
-TO authenticated 
-USING (true);
-
--- Contacts policies
-CREATE POLICY "Authenticated users can view all contacts" 
-ON contacts FOR SELECT 
-TO authenticated 
-USING (true);
-
-CREATE POLICY "Authenticated users can insert contacts" 
-ON contacts FOR INSERT 
-TO authenticated 
-WITH CHECK (true);
-
-CREATE POLICY "Authenticated users can update contacts" 
-ON contacts FOR UPDATE 
-TO authenticated 
-USING (true);
-
-CREATE POLICY "Authenticated users can delete contacts" 
-ON contacts FOR DELETE 
 TO authenticated 
 USING (true);
 ```
@@ -143,14 +107,6 @@ INSERT INTO tasks (title, description, category, location, type, scenario, "orde
 ('Wasser anstellen', 'Hauptwasserhahn aufdrehen', 'Bei Ankunft im Zielhaus', 'Niederlauterbach', 'Abflug', 'abflug-nl-ben', 11, false),
 ('Heizung/Klimaanlage einstellen', 'Temperatur auf Wohlfühltemperatur einstellen', 'Bei Ankunft im Zielhaus', 'Niederlauterbach', 'Abflug', 'abflug-nl-ben', 12, false),
 ('Kühlschrank auffüllen', 'Erste Einkäufe für den Aufenthalt', 'Bei Ankunft im Zielhaus', 'Niederlauterbach', 'Abflug', 'abflug-nl-ben', 13, false);
-
--- Beispiel-Kontakte
-INSERT INTO contacts (name, role, location, phone, email, notes) VALUES
-('Hausverwaltung Niederlauterbach', 'Hausverwaltung', 'Niederlauterbach', '+33 3 88 94 XX XX', 'verwaltung@example.fr', 'Erreichbar Mo-Fr 9-17 Uhr'),
-('Elektriker Schmidt', 'Elektriker', 'Niederlauterbach', '+33 6 12 34 56 78', 'schmidt@example.fr', 'Notdienst verfügbar'),
-('Hausverwaltung Benissa', 'Hausverwaltung', 'Benissa', '+34 965 XX XX XX', 'info@example.es', 'Erreichbar Mo-Fr 10-18 Uhr'),
-('Elektriker García', 'Elektriker', 'Benissa', '+34 612 34 56 78', 'garcia@example.es', 'Spricht Englisch und Deutsch'),
-('Werkstatt Auto Service', 'Werkstatt', 'Benissa', '+34 965 XX XX XX', 'autoservice@example.es', 'Öffnungszeiten: 8-20 Uhr');
 ```
 
 ## 4. Authentication einrichten
@@ -205,7 +161,7 @@ Diese beiden Werte benötigen Sie für die `.env.local` Datei in Ihrer Next.js-A
 Wenn Sie Echtzeit-Synchronisation zwischen mehreren Geräten möchten:
 
 1. Gehen Sie zu "Database" → "Replication"
-2. Aktivieren Sie Realtime für die Tabellen `tasks` und `contacts`
+2. Aktivieren Sie Realtime für die Tabelle `tasks`
 
 ## Fertig!
 
