@@ -109,14 +109,31 @@ export default function HomePage() {
 
   const handleLogout = async () => {
     try {
-      // Hole die aktuelle Session direkt von Supabase, um sicherzugehen
-      const { data: { session } } = await supabase.auth.getSession();
-
-      if (session) {
+      // Versuche Abmelden (funktioniert auch ohne Session)
+      try {
         await signOut();
+      } catch (error) {
+        // Ignoriere Fehler - Session könnte bereits abgelaufen sein
+        console.log('SignOut-Fehler ignoriert (möglicherweise bereits abgemeldet):', error);
+      }
+
+      // Bereinige lokale Daten
+      if (user) {
+        // Entferne alle benutzerspezifischen localStorage-Einträge
+        const keysToRemove: string[] = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && key.startsWith(`activeScenarios_${user.id}`)) {
+            keysToRemove.push(key);
+          }
+        }
+        keysToRemove.forEach(key => localStorage.removeItem(key));
+        
+        // Entferne auch veraltete Einträge für Rückwärtskompatibilität
+        localStorage.removeItem('activeScenario');
       }
       
-      // Unabhängig vom Fehler zur Login-Seite weiterleiten
+      // Zur Login-Seite weiterleiten
       router.push('/login');
 
     } catch (error) {

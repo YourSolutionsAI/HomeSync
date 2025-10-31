@@ -57,8 +57,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) throw error;
+    try {
+      // Versuche Abmelden, ignoriere Fehler wenn keine Session vorhanden ist
+      const { error } = await supabase.auth.signOut();
+      // Nur Fehler werfen, wenn es nicht um eine fehlende Session geht
+      if (error && !error.message.includes('Auth session missing')) {
+        throw error;
+      }
+    } catch (error: any) {
+      // Ignoriere AuthSessionMissingError - bedeutet nur, dass bereits abgemeldet ist
+      if (error?.message?.includes('Auth session missing')) {
+        return; // Bereits abgemeldet, kein Fehler
+      }
+      throw error;
+    }
   };
 
   const value = {
