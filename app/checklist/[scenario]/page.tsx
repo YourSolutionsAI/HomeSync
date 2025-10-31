@@ -440,27 +440,27 @@ export default function ChecklistPage() {
   return (
     <AuthGuard>
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 pb-20">
-        <div className="container mx-auto px-4 py-8 max-w-4xl">
+        <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-8 max-w-4xl">
           {/* Header */}
-          <div className="mb-6 fade-in">
+          <div className="mb-4 sm:mb-6 fade-in">
             <Tooltip text="Zurück zur Startseite mit allen Szenarien." position="right">
               <button
                 onClick={() => router.push('/')}
-                className="text-blue-600 hover:text-blue-700 mb-4 flex items-center gap-2 font-semibold transition-colors"
+                className="text-blue-600 hover:text-blue-700 mb-3 sm:mb-4 flex items-center gap-2 font-semibold transition-colors text-sm sm:text-base"
               >
-                <span className="text-xl">←</span> Zurück zur Auswahl
+                <span className="text-lg sm:text-xl">←</span> Zurück zur Auswahl
               </button>
             </Tooltip>
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-3xl font-bold text-gray-800 flex items-center gap-3">
-                  <span className="text-4xl">{scenario.icon}</span>
-                  {scenario.title}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div className="flex-1 min-w-0">
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 flex items-center gap-2 sm:gap-3">
+                  <span className="text-3xl sm:text-4xl flex-shrink-0">{scenario.icon}</span>
+                  <span className="truncate">{scenario.title}</span>
                 </h1>
-                <p className="text-gray-600 mt-2">{scenario.description}</p>
+                <p className="text-sm sm:text-base text-gray-600 mt-1 sm:mt-2">{scenario.description}</p>
               </div>
               {!online && (
-                <span className="bg-gradient-to-r from-yellow-400 to-orange-400 text-white px-4 py-2 rounded-full text-sm font-semibold shadow-lg">
+                <span className="bg-gradient-to-r from-yellow-400 to-orange-400 text-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-semibold shadow-lg flex-shrink-0">
                   📡 Offline
                 </span>
               )}
@@ -468,18 +468,18 @@ export default function ChecklistPage() {
           </div>
 
           {/* Progress Bar */}
-          <div className="card mb-6 fade-in">
-            <div className="flex justify-between items-center mb-3">
-              <span className="text-base font-semibold text-gray-700">
+          <div className="card mb-4 sm:mb-6 fade-in">
+            <div className="flex justify-between items-center mb-2 sm:mb-3">
+              <span className="text-sm sm:text-base font-semibold text-gray-700">
                 Fortschritt: {completedCount} von {totalCount}
               </span>
-              <span className="text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              <span className="text-base sm:text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                 {Math.round(progress)}%
               </span>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden shadow-inner">
+            <div className="w-full bg-gray-200 rounded-full h-3 sm:h-4 overflow-hidden shadow-inner">
               <div
-                className="bg-gradient-to-r from-blue-600 to-purple-600 h-4 rounded-full transition-all duration-500 shadow-lg"
+                className="bg-gradient-to-r from-blue-600 to-purple-600 h-3 sm:h-4 rounded-full transition-all duration-500 shadow-lg"
                 style={{ width: `${progress}%` }}
               ></div>
             </div>
@@ -487,18 +487,18 @@ export default function ChecklistPage() {
 
           {/* Completion Message */}
           {allCompleted && (
-            <div className="card mb-6 bg-gradient-to-br from-green-50 to-emerald-50 border-green-300 fade-in">
-              <div className="flex items-start gap-3">
-                <span className="text-4xl">🎉</span>
-                <div className="flex-1">
-                  <h2 className="text-2xl font-bold text-green-800 mb-2">
+            <div className="card mb-4 sm:mb-6 bg-gradient-to-br from-green-50 to-emerald-50 border-green-300 fade-in">
+              <div className="flex items-start gap-2 sm:gap-3">
+                <span className="text-3xl sm:text-4xl flex-shrink-0">🎉</span>
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-green-800 mb-1 sm:mb-2">
                     Alle Aufgaben erledigt!
                   </h2>
-                  <p className="text-green-700 mb-4 font-medium">
+                  <p className="text-sm sm:text-base text-green-700 mb-3 sm:mb-4 font-medium">
                     Herzlichen Glückwunsch! Du hast alle Aufgaben abgeschlossen. Gute Reise!
                   </p>
                   <Tooltip text="Setzt alle Aufgaben zurück und entfernt die Liste von der Startseite.">
-                    <button onClick={handleReset} className="btn-primary">
+                    <button onClick={handleReset} className="btn-primary text-sm sm:text-base py-2 sm:py-3 w-full sm:w-auto">
                       Checkliste zurücksetzen und zur Auswahl
                     </button>
                   </Tooltip>
@@ -508,25 +508,27 @@ export default function ChecklistPage() {
           )}
 
           {/* Tasks List */}
-          <div className="card mb-6 fade-in">
-            <div className="flex justify-between items-center mb-6 flex-wrap gap-2">
-              <h2 className="text-2xl font-bold text-gray-800">Aufgaben</h2>
-              <div className="flex gap-2 flex-wrap">
+          <div className="card mb-4 sm:mb-6 fade-in">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 sm:mb-6 gap-3">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-800">Aufgaben</h2>
+              <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                 {completedCount > 0 && (
                   <Tooltip text="Zeigt alle erledigten Aufgaben an oder blendet sie aus.">
                     <button
                       onClick={() => setShowAllCompleted(!showAllCompleted)}
-                      className="text-sm px-4 py-2 rounded-xl border-2 border-gray-300 hover:border-green-500 hover:bg-green-50 transition-all flex items-center gap-2 font-semibold"
+                      className="text-xs sm:text-sm px-3 sm:px-4 py-2 rounded-xl border-2 border-gray-300 hover:border-green-500 hover:bg-green-50 transition-all flex items-center justify-center gap-2 font-semibold w-full sm:w-auto"
                     >
                       {showAllCompleted ? (
                         <>
-                          <span className="text-green-600 text-lg">✓</span>
-                          Erledigte ausblenden
+                          <span className="text-green-600 text-base sm:text-lg">✓</span>
+                          <span className="hidden xs:inline">Erledigte ausblenden</span>
+                          <span className="xs:hidden">Ausblenden</span>
                         </>
                       ) : (
                         <>
-                          <span className="text-green-600 text-lg">✓</span>
-                          Alle Erledigten anzeigen
+                          <span className="text-green-600 text-base sm:text-lg">✓</span>
+                          <span className="hidden xs:inline">Alle Erledigten anzeigen</span>
+                          <span className="xs:hidden">Alle anzeigen</span>
                         </>
                       )}
                     </button>
@@ -536,19 +538,21 @@ export default function ChecklistPage() {
                   <button
                     onClick={handleDownloadPdf}
                     disabled={isGeneratingPdf}
-                    className="btn-secondary text-sm flex items-center gap-2 disabled:opacity-50"
+                    className="btn-secondary text-xs sm:text-sm flex items-center justify-center gap-2 disabled:opacity-50 py-2 sm:py-3 w-full sm:w-auto"
                   >
-                    <span className="text-lg">📄</span>
-                    {isGeneratingPdf ? 'PDF wird erstellt...' : 'PDF-Download'}
+                    <span className="text-base sm:text-lg">📄</span>
+                    <span className="hidden xs:inline">{isGeneratingPdf ? 'PDF wird erstellt...' : 'PDF-Download'}</span>
+                    <span className="xs:hidden">PDF</span>
                   </button>
                 </Tooltip>
                 <Tooltip text="Fügt eine neue Aufgabe zu dieser Checkliste hinzu.">
                   <button
                     onClick={() => setShowAddModal(true)}
-                    className="btn-primary text-sm flex items-center gap-2"
+                    className="btn-primary text-xs sm:text-sm flex items-center justify-center gap-2 py-2 sm:py-3 w-full sm:w-auto"
                   >
-                    <span className="text-lg">+</span>
-                    Aufgabe hinzufügen
+                    <span className="text-base sm:text-lg">+</span>
+                    <span className="hidden xs:inline">Aufgabe hinzufügen</span>
+                    <span className="xs:hidden">Hinzufügen</span>
                   </button>
                 </Tooltip>
               </div>
@@ -574,14 +578,14 @@ export default function ChecklistPage() {
                   className={`flex items-center justify-between mb-4 ${allCategoryTasksCompleted ? 'cursor-pointer hover:bg-gray-50 rounded-lg transition-colors' : ''}`}
                   onClick={allCategoryTasksCompleted ? () => toggleCategory(categoryKey) : undefined}
                 >
-                  <h3 className="text-xl font-bold text-gray-800 pb-2 border-b-2 border-blue-500 bg-gradient-to-r from-blue-50 to-transparent px-4 py-3 rounded-t-xl flex-1 flex items-center gap-2">
+                  <h3 className="text-base sm:text-lg md:text-xl font-bold text-gray-800 pb-2 border-b-2 border-blue-500 bg-gradient-to-r from-blue-50 to-transparent px-3 sm:px-4 py-2 sm:py-3 rounded-t-xl flex-1 flex items-center gap-1 sm:gap-2">
                     {allCategoryTasksCompleted && (
-                      <span className="text-lg">{isCategoryExpanded ? '▼' : '▶'}</span>
+                      <span className="text-sm sm:text-base md:text-lg flex-shrink-0">{isCategoryExpanded ? '▼' : '▶'}</span>
                     )}
-                    {category}
+                    <span className="break-words">{category}</span>
                   </h3>
                   {categoryCompletedCount > 0 && (
-                    <span className="text-xs text-gray-500 ml-2">
+                    <span className="text-xs text-gray-500 ml-2 flex-shrink-0 whitespace-nowrap">
                       {categoryCompletedCount} / {categoryTotalCount} ✓
                     </span>
                   )}
@@ -606,16 +610,16 @@ export default function ChecklistPage() {
                           {/* Unterkategorie-Überschrift - klickbar wenn alle erledigt */}
                           {showSubcategoryHeader && (
                             <h4 
-                              className={`text-base font-bold text-gray-700 mb-3 pl-4 border-l-4 border-blue-400 bg-gradient-to-r from-gray-50 to-transparent py-2 rounded-lg flex items-center gap-2 ${allSubcategoryTasksCompleted ? 'cursor-pointer hover:bg-gray-100 transition-all' : ''}`}
+                              className={`text-sm sm:text-base font-bold text-gray-700 mb-2 sm:mb-3 pl-3 sm:pl-4 border-l-4 border-blue-400 bg-gradient-to-r from-gray-50 to-transparent py-1.5 sm:py-2 rounded-lg flex items-center gap-1 sm:gap-2 ${allSubcategoryTasksCompleted ? 'cursor-pointer hover:bg-gray-100 transition-all' : ''}`}
                               onClick={allSubcategoryTasksCompleted ? () => toggleSubcategory(subcategoryKey) : undefined}
                             >
                               {allSubcategoryTasksCompleted && (
-                                <span className="text-base">{isSubcategoryExpanded ? '▼' : '▶'}</span>
+                                <span className="text-sm sm:text-base flex-shrink-0">{isSubcategoryExpanded ? '▼' : '▶'}</span>
                               )}
-                              <span className="text-lg">📌</span>
-                              <span>{subcategory}</span>
+                              <span className="text-base sm:text-lg flex-shrink-0">📌</span>
+                              <span className="break-words flex-1">{subcategory}</span>
                               {completedTasks.length > 0 && (
-                                <span className="text-sm text-gray-500 ml-auto bg-gray-200 px-2 py-1 rounded-full">
+                                <span className="text-xs sm:text-sm text-gray-500 ml-auto bg-gray-200 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full flex-shrink-0 whitespace-nowrap">
                                   {completedTasks.length}/{subcategoryTasks.length} ✓
                                 </span>
                               )}
@@ -671,9 +675,9 @@ export default function ChecklistPage() {
           </div>
 
           {/* Reset Button */}
-          <div className="mt-8 text-center fade-in">
+          <div className="mt-6 sm:mt-8 text-center fade-in">
             <Tooltip text="Setzt den Status aller Aufgaben in dieser Liste zurück. Die Liste bleibt auf der Startseite erhalten.">
-              <button onClick={handleReset} className="btn-danger px-8">
+              <button onClick={handleReset} className="btn-danger px-4 sm:px-8 py-2.5 sm:py-3 text-sm sm:text-base w-full sm:w-auto">
                 Checkliste zurücksetzen
               </button>
             </Tooltip>

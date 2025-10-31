@@ -2,6 +2,19 @@ export type Location = 'Niederlauterbach' | 'Benissa';
 export type TaskType = 'Abfahrt' | 'Abflug' | 'Vor Ort' | 'Reise';
 export type TransportType = 'Auto' | 'Flugzeug' | 'Nicht zutreffend';
 
+export interface Contact {
+  id: string;
+  name: string;
+  role: string;
+  location: Location;
+  phone?: string | null;
+  email?: string | null;
+  address?: string | null;
+  notes?: string | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export interface Task {
   id: string;
   title: string;

@@ -74,7 +74,7 @@ export default function ConfirmModal({
   const styles = getTypeStyles();
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fadeIn">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 animate-fadeIn">
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm"
@@ -82,25 +82,25 @@ export default function ConfirmModal({
       />
 
       {/* Modal */}
-      <div className="relative bg-white rounded-2xl shadow-2xl max-w-md w-full transform animate-slideUp">
+      <div className="relative bg-white rounded-xl sm:rounded-2xl shadow-2xl max-w-md w-full transform animate-slideUp">
         {/* Icon */}
-        <div className="flex justify-center pt-8 pb-4">
-          <div className={`${styles.iconBg} rounded-full p-4`}>
-            <span className={`text-4xl ${styles.iconColor}`}>{styles.icon}</span>
+        <div className="flex justify-center pt-6 sm:pt-8 pb-3 sm:pb-4">
+          <div className={`${styles.iconBg} rounded-full p-3 sm:p-4`}>
+            <span className={`text-3xl sm:text-4xl ${styles.iconColor}`}>{styles.icon}</span>
           </div>
         </div>
 
         {/* Content */}
-        <div className="px-8 pb-6 text-center">
-          <h3 className="text-2xl font-bold text-gray-900 mb-3">{title}</h3>
-          <p className="text-gray-600 leading-relaxed">{message}</p>
+        <div className="px-4 sm:px-6 md:px-8 pb-4 sm:pb-6 text-center">
+          <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2 sm:mb-3">{title}</h3>
+          <p className="text-sm sm:text-base text-gray-600 leading-relaxed">{message}</p>
         </div>
 
         {/* Actions */}
-        <div className="flex gap-3 px-8 pb-8">
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 px-4 sm:px-6 md:px-8 pb-4 sm:pb-6 md:pb-8">
           <button
             onClick={onClose}
-            className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-all duration-200 hover:scale-105"
+            className="flex-1 px-4 sm:px-6 py-2.5 sm:py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-all duration-200 hover:scale-105 text-sm sm:text-base"
           >
             {cancelText}
           </button>
@@ -109,7 +109,7 @@ export default function ConfirmModal({
               onConfirm();
               onClose();
             }}
-            className={`flex-1 px-6 py-3 ${styles.buttonBg} text-white rounded-xl font-semibold transition-all duration-200 hover:scale-105 shadow-lg`}
+            className={`flex-1 px-4 sm:px-6 py-2.5 sm:py-3 ${styles.buttonBg} text-white rounded-xl font-semibold transition-all duration-200 hover:scale-105 shadow-lg text-sm sm:text-base`}
           >
             {confirmText}
           </button>
