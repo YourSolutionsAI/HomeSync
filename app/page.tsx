@@ -228,7 +228,7 @@ export default function HomePage() {
               Szenario auswählen
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {SCENARIOS.map((scenario, index) => (
+              {SCENARIOS.filter(scenario => !activeScenarios.includes(scenario.id)).map((scenario, index) => (
                 <button
                   key={scenario.id}
                   onClick={() => handleScenarioSelect(scenario.id)}
