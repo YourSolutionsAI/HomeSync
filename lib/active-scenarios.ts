@@ -17,7 +17,7 @@ export async function getUserActiveScenarios(userId: string): Promise<string[]> 
       return [];
     }
 
-    return (data || []).map(item => item.scenario_id);
+    return (data || []).map((item: { scenario_id: string }) => item.scenario_id);
   } catch (error) {
     console.error('Fehler beim Laden der aktiven Szenarien:', error);
     return [];
@@ -29,8 +29,8 @@ export async function getUserActiveScenarios(userId: string): Promise<string[]> 
  */
 export async function addActiveScenario(userId: string, scenarioId: string): Promise<boolean> {
   try {
-    const { error } = await supabase
-      .from('user_active_scenarios')
+    const { error } = await (supabase
+      .from('user_active_scenarios') as any)
       .upsert({
         user_id: userId,
         scenario_id: scenarioId,
@@ -56,8 +56,8 @@ export async function addActiveScenario(userId: string, scenarioId: string): Pro
  */
 export async function removeActiveScenario(userId: string, scenarioId: string): Promise<boolean> {
   try {
-    const { error } = await supabase
-      .from('user_active_scenarios')
+    const { error } = await (supabase
+      .from('user_active_scenarios') as any)
       .delete()
       .eq('user_id', userId)
       .eq('scenario_id', scenarioId);
@@ -79,8 +79,8 @@ export async function removeActiveScenario(userId: string, scenarioId: string): 
  */
 export async function isScenarioActive(userId: string, scenarioId: string): Promise<boolean> {
   try {
-    const { data, error } = await supabase
-      .from('user_active_scenarios')
+    const { data, error } = await (supabase
+      .from('user_active_scenarios') as any)
       .select('id')
       .eq('user_id', userId)
       .eq('scenario_id', scenarioId)
@@ -103,8 +103,8 @@ export async function isScenarioActive(userId: string, scenarioId: string): Prom
  */
 export async function clearAllActiveScenarios(userId: string): Promise<boolean> {
   try {
-    const { error } = await supabase
-      .from('user_active_scenarios')
+    const { error } = await (supabase
+      .from('user_active_scenarios') as any)
       .delete()
       .eq('user_id', userId);
 
