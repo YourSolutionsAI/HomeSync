@@ -11,11 +11,18 @@ import Toast from '@/components/Toast';
 import DownloadPdfModal from '@/components/DownloadPdfModal';
 import HelpModal from '@/components/HelpModal';
 import Tooltip from '@/components/Tooltip';
+import { 
+  getUserActiveScenarios, 
+  addActiveScenario, 
+  removeActiveScenario,
+  syncActiveScenarios 
+} from '@/lib/active-scenarios';
 
 export default function HomePage() {
   const router = useRouter();
   const { signOut, user } = useAuth();
   const [activeScenarios, setActiveScenarios] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
   const [showResetModal, setShowResetModal] = useState(false);
   const [scenarioToReset, setScenarioToReset] = useState<string | null>(null);
   const [resetting, setResetting] = useState(false);
@@ -24,33 +31,49 @@ export default function HomePage() {
   const [showHelpModal, setShowHelpModal] = useState(false);
 
   useEffect(() => {
-    // Check if there are active scenarios in localStorage - benutzerspezifisch
-    if (user) {
-      const saved = localStorage.getItem(`activeScenarios_${user.id}`);
-      if (saved) {
+    const loadActiveScenarios = async () => {
+      if (user) {
+        setLoading(true);
         try {
-          const scenarios = JSON.parse(saved);
-          setActiveScenarios(Array.isArray(scenarios) ? scenarios : []);
-        } catch {
+          // Synchronisiere aktive Szenarien aus der Datenbank
+          const scenarios = await syncActiveScenarios(user.id);
+          setActiveScenarios(scenarios);
+        } catch (error) {
+          console.error('Fehler beim Laden der aktiven Szenarien:', error);
           setActiveScenarios([]);
+        } finally {
+          setLoading(false);
         }
       } else {
         setActiveScenarios([]);
+        setLoading(false);
       }
-    } else {
-      setActiveScenarios([]);
-    }
+    };
+
+    loadActiveScenarios();
   }, [user]);
 
-  const handleScenarioSelect = (scenarioId: string) => {
+  const handleScenarioSelect = async (scenarioId: string) => {
     if (!user) return;
-    // Add to active scenarios if not already there - benutzerspezifisch
-    const updated = activeScenarios.includes(scenarioId)
-      ? activeScenarios
-      : [...activeScenarios, scenarioId];
-    setActiveScenarios(updated);
-    localStorage.setItem(`activeScenarios_${user.id}`, JSON.stringify(updated));
-    router.push(`/checklist/${scenarioId}`);
+    
+    try {
+      // Füge zu aktiven Szenarien hinzu, falls noch nicht vorhanden
+      if (!activeScenarios.includes(scenarioId)) {
+        const success = await addActiveScenario(user.id, scenarioId);
+        if (success) {
+          const updated = [...activeScenarios, scenarioId];
+          setActiveScenarios(updated);
+        }
+      }
+      
+      router.push(`/checklist/${scenarioId}`);
+    } catch (error) {
+      console.error('Fehler beim Hinzufügen des aktiven Szenarios:', error);
+      setToast({
+        message: 'Fehler beim Aktivieren der Checkliste',
+        type: 'error',
+      });
+    }
   };
 
   const handleResetClick = (scenarioId: string) => {
@@ -85,10 +108,12 @@ export default function HomePage() {
         if (error) throw error;
       }
 
-      // Entferne aus aktiven Checklisten - benutzerspezifisch
-      const updated = activeScenarios.filter((id) => id !== scenarioToReset);
-      setActiveScenarios(updated);
-      localStorage.setItem(`activeScenarios_${user.id}`, JSON.stringify(updated));
+      // Entferne aus aktiven Checklisten
+      const success = await removeActiveScenario(user.id, scenarioToReset);
+      if (success) {
+        const updated = activeScenarios.filter((id) => id !== scenarioToReset);
+        setActiveScenarios(updated);
+      }
 
       // Erfolgsmeldung
       setToast({
@@ -109,28 +134,12 @@ export default function HomePage() {
 
   const handleLogout = async () => {
     try {
-      // Versuche Abmelden (funktioniert auch ohne Session)
-      try {
-        await signOut();
-      } catch (error) {
-        // Ignoriere Fehler - Session könnte bereits abgelaufen sein
-        console.log('SignOut-Fehler ignoriert (möglicherweise bereits abgemeldet):', error);
-      }
-
-      // Bereinige lokale Daten
-      if (user) {
-        // Entferne alle benutzerspezifischen localStorage-Einträge
-        const keysToRemove: string[] = [];
-        for (let i = 0; i < localStorage.length; i++) {
-          const key = localStorage.key(i);
-          if (key && key.startsWith(`activeScenarios_${user.id}`)) {
-            keysToRemove.push(key);
-          }
-        }
-        keysToRemove.forEach(key => localStorage.removeItem(key));
-        
-        // Entferne auch veraltete Einträge für Rückwärtskompatibilität
-        localStorage.removeItem('activeScenario');
+      // Versuche abzumelden - die signOut Funktion ist jetzt robust genug
+      await signOut();
+      
+      // Lokalen Storage für diesen Benutzer löschen (Fallback-Daten)
+      if (user?.id) {
+        localStorage.removeItem(`activeScenarios_${user.id}`);
       }
       
       // Zur Login-Seite weiterleiten

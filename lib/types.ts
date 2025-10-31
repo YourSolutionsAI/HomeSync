@@ -30,6 +30,14 @@ export interface UserTaskStatus {
   updated_at: string;
 }
 
+export interface UserActiveScenario {
+  id: string;
+  user_id: string;
+  scenario_id: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Scenario {
   id: string;
   title: string;

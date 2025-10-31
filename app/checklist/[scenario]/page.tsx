@@ -18,6 +18,7 @@ import {
   isOnline,
 } from '@/lib/offline-storage';
 import { generateChecklistPDF } from '@/lib/pdf-generator';
+import { addActiveScenario, removeActiveScenario } from '@/lib/active-scenarios';
 import Tooltip from '@/components/Tooltip';
 
 export default function ChecklistPage() {
@@ -53,24 +54,20 @@ export default function ChecklistPage() {
   }, []);
 
   useEffect(() => {
-    if (scenario && user) {
-      loadData();
-      
-      // Füge Checkliste zu aktiven Checklisten hinzu, falls noch nicht vorhanden - benutzerspezifisch
-      const saved = localStorage.getItem(`activeScenarios_${user.id}`);
-      let activeScenarios: string[] = [];
-      if (saved) {
+    const initializeScenario = async () => {
+      if (scenario && user) {
+        await loadData();
+        
+        // Füge Checkliste zu aktiven Checklisten hinzu, falls noch nicht vorhanden
         try {
-          activeScenarios = JSON.parse(saved);
-        } catch {
-          activeScenarios = [];
+          await addActiveScenario(user.id, scenarioId);
+        } catch (error) {
+          console.error('Fehler beim Hinzufügen des aktiven Szenarios:', error);
         }
       }
-      if (!activeScenarios.includes(scenarioId)) {
-        activeScenarios.push(scenarioId);
-        localStorage.setItem(`activeScenarios_${user.id}`, JSON.stringify(activeScenarios));
-      }
-    }
+    };
+
+    initializeScenario();
   }, [scenario, user, scenarioId]);
 
   const loadData = async () => {
@@ -227,17 +224,12 @@ export default function ChecklistPage() {
         await updateTaskStatusOffline(user.id, taskId, false);
       }
 
-      // Remove from active scenarios - benutzerspezifisch
+      // Remove from active scenarios
       if (user) {
-        const saved = localStorage.getItem(`activeScenarios_${user.id}`);
-        if (saved) {
-          try {
-            const scenarios = JSON.parse(saved);
-            const updated = scenarios.filter((id: string) => id !== scenarioId);
-            localStorage.setItem(`activeScenarios_${user.id}`, JSON.stringify(updated));
-          } catch {
-            // Ignore errors
-          }
+        try {
+          await removeActiveScenario(user.id, scenarioId);
+        } catch (error) {
+          console.error('Fehler beim Entfernen des aktiven Szenarios:', error);
         }
         // Also remove old single scenario for backwards compatibility
         localStorage.removeItem('activeScenario');

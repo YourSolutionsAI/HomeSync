@@ -58,18 +58,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     try {
-      // Versuche Abmelden, ignoriere Fehler wenn keine Session vorhanden ist
-      const { error } = await supabase.auth.signOut();
-      // Nur Fehler werfen, wenn es nicht um eine fehlende Session geht
-      if (error && !error.message.includes('Auth session missing')) {
+      // Versuche zuerst die aktuelle Session zu holen
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      // Nur wenn eine Session existiert, versuchen wir abzumelden
+      if (session) {
+        const { error } = await supabase.auth.signOut();
+        if (error && error.message !== 'Auth session missing!') {
+          // Ignoriere "Auth session missing!" Fehler, werfe andere Fehler
+          throw error;
+        }
+      }
+      
+      // In jedem Fall lokale State zurücksetzen
+      setUser(null);
+      setSession(null);
+    } catch (error: any) {
+      // Wenn es ein "Auth session missing!" Fehler ist, ignorieren
+      if (error?.message !== 'Auth session missing!') {
         throw error;
       }
-    } catch (error: any) {
-      // Ignoriere AuthSessionMissingError - bedeutet nur, dass bereits abgemeldet ist
-      if (error?.message?.includes('Auth session missing')) {
-        return; // Bereits abgemeldet, kein Fehler
-      }
-      throw error;
+      // Auch bei diesem Fehler State zurücksetzen
+      setUser(null);
+      setSession(null);
     }
   };
 
