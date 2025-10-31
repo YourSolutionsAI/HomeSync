@@ -56,9 +56,9 @@ export default function DownloadPdfModal({
         let tasks: Task[] = [];
         
         if (online) {
-            const { data: tasksData } = await supabase.from('tasks').select('*').eq('scenario', scenarioId);
-            const { data: statusData } = await supabase.from('user_task_status').select('task_id, done').eq('user_id', user.id);
-            const statusMap = (statusData || []).reduce((acc, status) => ({ ...acc, [status.task_id]: status.done }), {});
+            const { data: tasksData } = await supabase.from('tasks').select('*').eq('scenario', scenarioId).returns<Task[]>();
+            const { data: statusData } = await supabase.from('user_task_status').select('task_id, done').eq('user_id', user.id).returns<{ task_id: string; done: boolean; }[]>();
+            const statusMap = (statusData || []).reduce((acc, status) => ({ ...acc, [status.task_id]: status.done }), {} as Record<string, boolean>);
             tasks = (tasksData || []).map(t => ({ ...t, done: statusMap[t.id] ?? false }));
         } else {
             tasks = await getTasksByScenario(scenarioId);
