@@ -27,6 +27,23 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
           </button>
         </div>
 
+        <div className="p-6 border-b border-gray-200 flex flex-col sm:flex-row justify-center items-center gap-3">
+            <a
+                href="https://wa.me/4915906261555?text=Hallo%20Jonas%2C%20ich%20habe%20eine%20Frage%20zur%20Reise-Check-App."
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-xl transition-all duration-200 font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 w-full sm:w-auto text-center"
+            >
+                Whatsapp an Jonas
+            </a>
+            <a
+                href="tel:+4915906261555"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl transition-all duration-200 font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 w-full sm:w-auto text-center"
+            >
+                Jonas anrufen
+            </a>
+        </div>
+
         <div className="p-8 overflow-y-auto">
           <div className="space-y-6 text-gray-700">
             <p>
@@ -72,10 +89,10 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
           </div>
         </div>
 
-        <div className="p-6 bg-gray-50 border-t border-gray-200 rounded-b-2xl text-right">
+        <div className="p-6 bg-gray-50 border-t border-gray-200 rounded-b-2xl flex flex-col sm:flex-row justify-end items-center gap-3">
           <button
             onClick={onClose}
-            className="btn-primary"
+            className="bg-[#9966CC] hover:bg-[#8A5FB5] text-white px-6 py-3 rounded-xl transition-all duration-200 font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 active:scale-95 w-full sm:w-auto"
           >
             Verstanden!
           </button>
