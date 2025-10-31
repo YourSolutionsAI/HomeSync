@@ -11,26 +11,23 @@ export interface Task {
   location: Location;
   type: TaskType;
   scenario: string;
-  done: boolean;
+  done: boolean; // Wird jetzt aus user_task_status berechnet, bleibt für Kompatibilität
   order: number;
   link?: string | null;
   image_url?: string | null;
+  image_urls?: string[] | null;
   notes?: string | null;
   transport_type?: TransportType | null;
   created_at: string;
   updated_at: string;
 }
 
-export interface Contact {
+export interface UserTaskStatus {
   id: string;
-  name: string;
-  role: string;
-  location: Location;
-  phone?: string | null;
-  email?: string | null;
-  address?: string | null;
-  notes?: string | null;
-  created_at: string;
+  user_id: string;
+  task_id: string;
+  done: boolean;
+  updated_at: string;
 }
 
 export interface Scenario {

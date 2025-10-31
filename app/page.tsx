@@ -8,15 +8,20 @@ import { SCENARIOS } from '@/lib/types';
 import { supabase } from '@/lib/supabase';
 import ConfirmModal from '@/components/ConfirmModal';
 import Toast from '@/components/Toast';
+import DownloadPdfModal from '@/components/DownloadPdfModal';
+import HelpModal from '@/components/HelpModal';
+import Tooltip from '@/components/Tooltip';
 
 export default function HomePage() {
   const router = useRouter();
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
   const [activeScenarios, setActiveScenarios] = useState<string[]>([]);
   const [showResetModal, setShowResetModal] = useState(false);
   const [scenarioToReset, setScenarioToReset] = useState<string | null>(null);
   const [resetting, setResetting] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const [showPdfModal, setShowPdfModal] = useState(false);
+  const [showHelpModal, setShowHelpModal] = useState(false);
 
   useEffect(() => {
     // Check if there are active scenarios in localStorage
@@ -50,12 +55,27 @@ export default function HomePage() {
 
     setResetting(true);
     try {
-      // Reset alle Tasks dieser Checkliste auf "nicht erledigt"
-      const { error } = await (supabase.from('tasks') as any)
-        .update({ done: false })
+      if (!user) {
+        throw new Error('Benutzer nicht eingeloggt');
+      }
+
+      // Hole alle Task-IDs für dieses Szenario
+      const { data: tasksData } = await supabase
+        .from('tasks')
+        .select('id')
         .eq('scenario', scenarioToReset);
 
-      if (error) throw error;
+      const taskIds = (tasksData || []).map((t: { id: string }) => t.id);
+      
+      if (taskIds.length > 0) {
+        // Lösche alle Status-Einträge des aktuellen Benutzers für diese Tasks
+        const { error } = await (supabase.from('user_task_status') as any)
+          .delete()
+          .eq('user_id', user.id)
+          .in('task_id', taskIds);
+
+        if (error) throw error;
+      }
 
       // Entferne aus aktiven Checklisten
       const updated = activeScenarios.filter((id) => id !== scenarioToReset);
@@ -101,20 +121,32 @@ export default function HomePage() {
               <p className="text-gray-600 text-sm mt-1">Verwalte deine Reisen zwischen Niederlauterbach und Benissa</p>
             </div>
             <div className="flex gap-2">
-              <button
-                onClick={() => router.push('/contacts')}
-                className="btn-secondary text-sm sm:text-base flex items-center justify-center gap-2"
-                title="Kontakte anzeigen"
-              >
-                <span className="text-lg">📞</span>
-                <span className="hidden sm:inline">Kontakte</span>
-              </button>
-              <button 
-                onClick={handleLogout} 
-                className="btn-secondary text-sm sm:text-base"
-              >
-                Abmelden
-              </button>
+              <Tooltip text="Hilfe und Anleitung anzeigen">
+                <button
+                  onClick={() => setShowHelpModal(true)}
+                  className="btn-secondary text-sm sm:text-base flex items-center justify-center gap-2"
+                >
+                  <span className="text-lg">❓</span>
+                  <span className="hidden sm:inline">Hilfe</span>
+                </button>
+              </Tooltip>
+              <Tooltip text="Alle aktiven Checklisten als PDF herunterladen">
+                <button
+                  onClick={() => setShowPdfModal(true)}
+                  className="btn-secondary text-sm sm:text-base flex items-center justify-center gap-2"
+                >
+                  <span className="text-lg">📄</span>
+                  <span className="hidden sm:inline">PDFs</span>
+                </button>
+              </Tooltip>
+              <Tooltip text="Vom aktuellen Konto abmelden">
+                <button 
+                  onClick={handleLogout} 
+                  className="btn-secondary text-sm sm:text-base"
+                >
+                  Abmelden
+                </button>
+              </Tooltip>
             </div>
           </div>
 
@@ -147,20 +179,23 @@ export default function HomePage() {
                       
                       {/* Buttons */}
                       <div className="flex gap-2 sm:flex-shrink-0">
-                        <button
-                          onClick={() => handleResetClick(scenarioId)}
-                          className="flex-1 sm:flex-none px-4 py-2 text-sm border-2 border-gray-300 text-gray-600 rounded-xl hover:border-red-500 hover:text-red-600 hover:bg-red-50 transition-all duration-200 flex items-center justify-center gap-2 whitespace-nowrap font-medium"
-                          title="Checkliste zurücksetzen"
-                        >
-                          <span className="text-lg">↻</span>
-                          <span className="hidden xs:inline">Zurücksetzen</span>
-                        </button>
-                        <button
-                          onClick={() => router.push(`/checklist/${scenarioId}`)}
-                          className="flex-1 sm:flex-none btn-primary text-sm whitespace-nowrap"
-                        >
-                          Öffnen →
-                        </button>
+                        <Tooltip text="Setzt alle Aufgaben zurück und entfernt die Liste von hier.">
+                          <button
+                            onClick={() => handleResetClick(scenarioId)}
+                            className="flex-1 sm:flex-none px-4 py-2 text-sm border-2 border-gray-300 text-gray-600 rounded-xl hover:border-red-500 hover:text-red-600 hover:bg-red-50 transition-all duration-200 flex items-center justify-center gap-2 whitespace-nowrap font-medium"
+                          >
+                            <span className="text-lg">↻</span>
+                            <span className="hidden xs:inline">Zurücksetzen</span>
+                          </button>
+                        </Tooltip>
+                        <Tooltip text="Checkliste öffnen und Aufgaben bearbeiten.">
+                          <button
+                            onClick={() => router.push(`/checklist/${scenarioId}`)}
+                            className="flex-1 sm:flex-none btn-primary text-sm whitespace-nowrap"
+                          >
+                            Öffnen →
+                          </button>
+                        </Tooltip>
                       </div>
                     </div>
                   );
@@ -221,6 +256,16 @@ export default function HomePage() {
         cancelText="Abbrechen"
         type="warning"
       />
+
+      {/* PDF Download Modal */}
+      <DownloadPdfModal
+        isOpen={showPdfModal}
+        onClose={() => setShowPdfModal(false)}
+        activeScenarioIds={activeScenarios}
+      />
+
+      {/* Help Modal */}
+      <HelpModal isOpen={showHelpModal} onClose={() => setShowHelpModal(false)} />
 
       {/* Toast Notification */}
       {toast && (

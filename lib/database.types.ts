@@ -68,39 +68,27 @@ export interface Database {
           updated_at?: string
         }
       }
-      contacts: {
+      user_task_status: {
         Row: {
           id: string
-          name: string
-          role: string
-          location: 'Niederlauterbach' | 'Benissa'
-          phone: string | null
-          email: string | null
-          address: string | null
-          notes: string | null
-          created_at: string
+          user_id: string
+          task_id: string
+          done: boolean
+          updated_at: string
         }
         Insert: {
           id?: string
-          name: string
-          role: string
-          location: 'Niederlauterbach' | 'Benissa'
-          phone?: string | null
-          email?: string | null
-          address?: string | null
-          notes?: string | null
-          created_at?: string
+          user_id: string
+          task_id: string
+          done?: boolean
+          updated_at?: string
         }
         Update: {
           id?: string
-          name?: string
-          role?: string
-          location?: 'Niederlauterbach' | 'Benissa'
-          phone?: string | null
-          email?: string | null
-          address?: string | null
-          notes?: string | null
-          created_at?: string
+          user_id?: string
+          task_id?: string
+          done?: boolean
+          updated_at?: string
         }
       }
     }

@@ -1,6 +1,7 @@
 'use client';
 
 import { Task } from '@/lib/types';
+import Tooltip from './Tooltip';
 
 interface TaskItemProps {
   task: Task;
@@ -9,31 +10,41 @@ interface TaskItemProps {
 }
 
 export default function TaskItem({ task, onToggle, onDetail }: TaskItemProps) {
-  const handleCheckboxClick = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Verhindert, dass das Detail-Modal aufgeht
+  const handleDetailClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Verhindert, dass der Task-Status umgeschaltet wird
+    onDetail();
   };
 
   return (
     <div 
-      className="flex items-start gap-4 p-4 bg-white rounded-xl border-2 border-gray-200 hover:border-blue-400 hover:shadow-lg transition-all cursor-pointer transform hover:scale-[1.01]"
-      onClick={onDetail}
+      className={`flex items-start gap-4 p-4 bg-white rounded-xl border-2 transition-all cursor-pointer transform hover:scale-[1.01] ${
+        task.done 
+          ? 'border-green-300 bg-green-50' 
+          : 'border-gray-200 hover:border-blue-400 hover:shadow-lg'
+      }`}
+      onClick={() => onToggle(task.id)}
     >
-      <div onClick={handleCheckboxClick} className="pt-0.5">
-        <input
-          type="checkbox"
-          checked={task.done}
-          onChange={() => onToggle(task.id)}
-          className="w-6 h-6 flex-shrink-0 cursor-pointer accent-blue-600"
-        />
+      {/* Visueller Indikator statt Checkbox */}
+      <div className="flex-shrink-0 pt-1">
+        <div className={`w-6 h-6 rounded-full flex items-center justify-center transition-all ${
+          task.done ? 'bg-green-500' : 'bg-gray-200 border-2 border-gray-300'
+        }`}>
+          {task.done && (
+            <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+            </svg>
+          )}
+        </div>
       </div>
+
       <div className="flex-1 min-w-0">
         <h4
-          className={`text-lg font-semibold text-gray-900 ${task.done ? 'task-completed' : ''}`}
+          className={`text-lg font-semibold text-gray-900 ${task.done ? 'line-through text-gray-500' : ''}`}
         >
           {task.title}
         </h4>
         {task.description && (
-          <p className="text-sm text-gray-600 mt-2 line-clamp-2 leading-relaxed">
+          <p className={`text-sm text-gray-600 mt-2 line-clamp-2 leading-relaxed ${task.done ? 'text-gray-400' : ''}`}>
             {task.description}
           </p>
         )}
@@ -45,6 +56,19 @@ export default function TaskItem({ task, onToggle, onDetail }: TaskItemProps) {
           </div>
         )}
       </div>
+
+      {/* Detail Button */}
+      <Tooltip text="Details anzeigen, Notizen und Bilder bearbeiten" position="left">
+        <button 
+          onClick={handleDetailClick}
+          className="flex-shrink-0 p-2 rounded-full hover:bg-gray-200 transition-colors"
+          aria-label="Task-Details anzeigen"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+          </svg>
+        </button>
+      </Tooltip>
     </div>
   );
 }

@@ -132,6 +132,16 @@ export default function AddTaskModal({
   // Wähle Kategorien basierend auf Szenario-Typ
   const isVorOrt = scenario?.type === 'Vor Ort';
   const CATEGORIES = isVorOrt ? CATEGORIES_VOR_ORT : CATEGORIES_REISE;
+
+  const [isAddingCategory, setIsAddingCategory] = useState(false);
+  const [newCategory, setNewCategory] = useState('');
+  const [isAddingSubcategory, setIsAddingSubcategory] = useState(false);
+  const [newSubcategory, setNewSubcategory] = useState('');
+
+  const [customCategories, setCustomCategories] = useState<string[]>([]);
+  const [customSubcategories, setCustomSubcategories] = useState<Record<string, string[]>>({});
+
+  const allCategories = [...CATEGORIES, ...customCategories.filter(c => !CATEGORIES.includes(c))];
   
   // Funktion zum Abrufen der Unterkategorien basierend auf Kategorie
   const getSubcategories = (category: string): string[] => {
@@ -141,10 +151,25 @@ export default function AddTaskModal({
       : getSubcategoriesReise(category, scenario.location);
   };
 
+  const getDynamicSubcategories = (category: string): string[] => {
+    const baseSubcategories = getSubcategories(category);
+    const custom = customSubcategories[category] || [];
+    const combined = [...baseSubcategories];
+    custom.forEach(c => {
+        if (!combined.includes(c)) {
+            combined.push(c);
+        }
+    });
+    if (baseSubcategories.length === 0 && combined.length === 0) {
+        return ['Allgemein', ...custom];
+    }
+    return combined;
+  };
+
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    category: CATEGORIES[0],
+    category: allCategories[0],
     subcategory: 'Allgemein',
     link: '',
     notes: '',
@@ -155,8 +180,35 @@ export default function AddTaskModal({
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
 
+  const handleAddCategory = () => {
+    const trimmedCategory = newCategory.trim();
+    if (trimmedCategory && !allCategories.includes(trimmedCategory)) {
+        setCustomCategories([...customCategories, trimmedCategory]);
+        handleCategoryChange(trimmedCategory);
+        setNewCategory('');
+        setIsAddingCategory(false);
+    }
+  };
+
+  const handleAddSubcategory = () => {
+    const trimmedSubcategory = newSubcategory.trim();
+    const currentCategory = formData.category;
+    const subcategoriesForCurrentCategory = getDynamicSubcategories(currentCategory);
+
+    if (trimmedSubcategory && !subcategoriesForCurrentCategory.includes(trimmedSubcategory)) {
+        const currentCustoms = customSubcategories[currentCategory] || [];
+        setCustomSubcategories({
+            ...customSubcategories,
+            [currentCategory]: [...currentCustoms, trimmedSubcategory]
+        });
+        setFormData({ ...formData, subcategory: trimmedSubcategory });
+        setNewSubcategory('');
+        setIsAddingSubcategory(false);
+    }
+  };
+
   const handleCategoryChange = (newCategory: string) => {
-    const subcategories = getSubcategories(newCategory);
+    const subcategories = getDynamicSubcategories(newCategory);
     setFormData({
       ...formData,
       category: newCategory,
@@ -280,7 +332,7 @@ export default function AddTaskModal({
         image_urls: uploadedUrls.length > 0 ? uploadedUrls : null, // Alle Bilder als Array
         notes: formData.notes || null,
         transport_type: null, // Wird auf Checklisten-Ebene gesetzt
-        done: false,
+        // done Feld wird nicht mehr benötigt, da Status jetzt in user_task_status gespeichert wird
       });
 
       if (error) throw error;
@@ -344,40 +396,82 @@ export default function AddTaskModal({
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Kategorie
               </label>
-              <select
-                value={formData.category}
-                onChange={(e) => handleCategoryChange(e.target.value)}
-                className="input"
-              >
-                {CATEGORIES.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat}
-                  </option>
-                ))}
-              </select>
+              <div className="flex items-center space-x-2">
+                <select
+                  value={formData.category}
+                  onChange={(e) => handleCategoryChange(e.target.value)}
+                  className="input flex-1"
+                >
+                  {allCategories.map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
+                  ))}
+                </select>
+                <button type="button" onClick={() => setIsAddingCategory(c => !c)} className="btn-secondary p-2.5 leading-none aspect-square">+</button>
+              </div>
+              {isAddingCategory && (
+                <div className="mt-2 flex items-center space-x-2 animate-fadeIn">
+                    <input
+                        type="text"
+                        value={newCategory}
+                        onChange={(e) => setNewCategory(e.target.value)}
+                        className="input flex-1"
+                        placeholder="Neue Kategorie eingeben"
+                        autoFocus
+                    />
+                    <button type="button" onClick={handleAddCategory} className="btn-primary">
+                        Hinzufügen
+                    </button>
+                    <button type="button" onClick={() => { setIsAddingCategory(false); setNewCategory(''); }} className="btn-secondary">
+                        Abbrechen
+                    </button>
+                </div>
+              )}
             </div>
 
             {/* Unterkategorie nur anzeigen, wenn mehr als "Allgemein" verfügbar */}
             {(() => {
-              const subcategories = getSubcategories(formData.category);
-              return subcategories.length > 1 && (
+              const subcategories = getDynamicSubcategories(formData.category);
+              return subcategories.length > 0 && ( // Immer anzeigen, wenn es welche gibt
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Unterkategorie
                   </label>
-                  <select
-                    value={formData.subcategory}
-                    onChange={(e) =>
-                      setFormData({ ...formData, subcategory: e.target.value })
-                    }
-                    className="input"
-                  >
-                    {subcategories.map((subcat) => (
-                      <option key={subcat} value={subcat}>
-                        {subcat}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="flex items-center space-x-2">
+                    <select
+                      value={formData.subcategory}
+                      onChange={(e) =>
+                        setFormData({ ...formData, subcategory: e.target.value })
+                      }
+                      className="input flex-1"
+                    >
+                      {subcategories.map((subcat) => (
+                        <option key={subcat} value={subcat}>
+                          {subcat}
+                        </option>
+                      ))}
+                    </select>
+                    <button type="button" onClick={() => setIsAddingSubcategory(c => !c)} className="btn-secondary p-2.5 leading-none aspect-square">+</button>
+                  </div>
+                  {isAddingSubcategory && (
+                    <div className="mt-2 flex items-center space-x-2 animate-fadeIn">
+                        <input
+                            type="text"
+                            value={newSubcategory}
+                            onChange={(e) => setNewSubcategory(e.target.value)}
+                            className="input flex-1"
+                            placeholder="Neue Unterkategorie"
+                            autoFocus
+                        />
+                        <button type="button" onClick={handleAddSubcategory} className="btn-primary">
+                            Hinzufügen
+                        </button>
+                        <button type="button" onClick={() => { setIsAddingSubcategory(false); setNewSubcategory(''); }} className="btn-secondary">
+                            Abbrechen
+                        </button>
+                    </div>
+                  )}
                 </div>
               );
             })()}

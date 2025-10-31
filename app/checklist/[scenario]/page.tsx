@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import AuthGuard from '@/components/AuthGuard';
-import { Task, SCENARIOS, Contact } from '@/lib/types';
+import { useAuth } from '@/contexts/AuthContext';
+import { Task, SCENARIOS } from '@/lib/types';
 import { supabase } from '@/lib/supabase';
 import TaskItem from '@/components/TaskItem';
 import TaskDetailModal from '@/components/TaskDetailModal';
@@ -11,20 +12,22 @@ import AddTaskModal from '@/components/AddTaskModal';
 import {
   saveTasks,
   getTasksByScenario,
-  updateTask as updateTaskOffline,
-  saveContacts,
-  getContactsByLocation,
+  updateTaskStatusOffline,
+  getUserTaskStatusOffline,
+  saveUserTaskStatusOffline,
   isOnline,
 } from '@/lib/offline-storage';
+import { generateChecklistPDF } from '@/lib/pdf-generator';
+import Tooltip from '@/components/Tooltip';
 
 export default function ChecklistPage() {
   const params = useParams();
   const router = useRouter();
+  const { user } = useAuth();
   const scenarioId = params.scenario as string;
   const scenario = SCENARIOS.find((s) => s.id === scenarioId);
 
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -32,6 +35,7 @@ export default function ChecklistPage() {
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
   const [expandedSubcategories, setExpandedSubcategories] = useState<Record<string, boolean>>({});
   const [showAllCompleted, setShowAllCompleted] = useState(false);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
 
   useEffect(() => {
     setOnline(isOnline());
@@ -49,15 +53,17 @@ export default function ChecklistPage() {
   }, []);
 
   useEffect(() => {
-    if (scenario) {
+    if (scenario && user) {
       loadData();
     }
-  }, [scenario]);
+  }, [scenario, user]);
 
   const loadData = async () => {
+    if (!user) return;
+    
     try {
       if (online) {
-        // Load from Supabase
+        // Load tasks from Supabase (ohne done Feld, da das jetzt in user_task_status ist)
         const { data: tasksData, error: tasksError } = await supabase
           .from('tasks')
           .select('*')
@@ -66,25 +72,68 @@ export default function ChecklistPage() {
 
         if (tasksError) throw tasksError;
 
-        const { data: contactsData, error: contactsError } = await supabase
-          .from('contacts')
-          .select('*')
-          .eq('location', scenario!.location);
+        // Load user-specific task status from user_task_status
+        const taskIds = (tasksData || []).map((t: { id: string }) => t.id);
+        let statusMap: Record<string, boolean> = {};
+        let statusData: ({ task_id: string; done: boolean; }[] | null) = null;
+        
+        if (taskIds.length > 0) {
+          const { data, error: statusError } = await supabase
+            .from('user_task_status')
+            .select('task_id, done')
+            .eq('user_id', user.id)
+            .in('task_id', taskIds);
 
-        if (contactsError) throw contactsError;
+          statusData = data;
 
-        setTasks(tasksData || []);
-        setContacts(contactsData || []);
+          if (statusError) {
+            console.error('Fehler beim Laden der Status:', statusError);
+          } else {
+            // Erstelle eine Map für schnellen Zugriff
+            statusMap = (data || []).reduce((acc, status: { task_id: string, done: boolean }) => {
+              acc[status.task_id] = status.done;
+              return acc;
+            }, {} as Record<string, boolean>);
+          }
+        }
+
+        // Kombiniere Tasks mit Status (default: false wenn kein Status vorhanden)
+        const tasksWithStatus = (tasksData || []).map((task: Omit<Task, 'done'>) => ({
+          ...task,
+          done: statusMap[task.id] ?? false
+        }));
+
+        setTasks(tasksWithStatus);
 
         // Save to offline storage
         if (tasksData) await saveTasks(tasksData);
-        if (contactsData) await saveContacts(contactsData);
+        if (statusData && statusData.length > 0) {
+          await saveUserTaskStatusOffline(statusData.map((s: {task_id: string, done: boolean}) => ({
+            id: `${user.id}-${s.task_id}`, // Generiere ID für Offline-Speicherung
+            user_id: user.id,
+            task_id: s.task_id,
+            done: s.done,
+            updated_at: new Date().toISOString()
+          })));
+        }
       } else {
         // Load from offline storage
         const offlineTasks = await getTasksByScenario(scenarioId);
-        const offlineContacts = await getContactsByLocation(scenario!.location);
-        setTasks(offlineTasks);
-        setContacts(offlineContacts);
+        const offlineStatuses = await getUserTaskStatusOffline(user.id, scenarioId);
+        
+        // Erstelle Status-Map
+        const statusMap = offlineStatuses.reduce((acc, status) => {
+          acc[status.task_id] = status.done;
+          return acc;
+        }, {} as Record<string, boolean>);
+        
+        // Kombiniere Tasks mit Status
+        const tasksWithStatus = offlineTasks.map(task => ({
+          ...task,
+          done: statusMap[task.id] ?? false
+        }));
+        
+        setTasks(tasksWithStatus);
       }
     } catch (error) {
       console.error('Fehler beim Laden der Daten:', error);
@@ -94,54 +143,74 @@ export default function ChecklistPage() {
   };
 
   const toggleTask = async (taskId: string) => {
+    if (!user) return;
+    
     const task = tasks.find((t) => t.id === taskId);
     if (!task) return;
 
-    const updatedTask = { ...task, done: !task.done, updated_at: new Date().toISOString() };
+    const newDoneStatus = !task.done;
     
-    // Update locally
-    setTasks(tasks.map((t) => (t.id === taskId ? updatedTask : t)));
+    // Update locally immediately
+    setTasks(tasks.map((t) => (t.id === taskId ? { ...t, done: newDoneStatus } : t)));
     
-    // Save offline
-    await updateTaskOffline(updatedTask);
+    // Save offline status
+    await updateTaskStatusOffline(user.id, taskId, newDoneStatus);
 
     // Update in Supabase if online
     if (online) {
       try {
-        const { error } = await (supabase.from('tasks') as any)
-          .update({
-            done: updatedTask.done,
-            updated_at: updatedTask.updated_at
-          })
-          .eq('id', taskId);
+        // Upsert: Insert wenn nicht vorhanden, Update wenn vorhanden
+        const { error } = await (supabase.from('user_task_status') as any)
+          .upsert({
+            user_id: user.id,
+            task_id: taskId,
+            done: newDoneStatus,
+            updated_at: new Date().toISOString()
+          }, {
+            onConflict: 'user_id,task_id'
+          });
         
         if (error) throw error;
       } catch (error) {
-        console.error('Fehler beim Aktualisieren der Aufgabe:', error);
+        console.error('Fehler beim Aktualisieren des Status:', error);
+        // Rollback local state bei Fehler
+        setTasks(tasks.map((t) => (t.id === taskId ? { ...t, done: !newDoneStatus } : t)));
       }
     }
   };
 
   const handleReset = async () => {
+    if (!user) return;
+    
     if (!confirm('Möchtest Du die Checkliste wirklich zurücksetzen?')) {
       return;
     }
 
     try {
       if (online) {
-        const { error } = await (supabase.from('tasks') as any)
-          .update({
-            done: false
-          })
-          .eq('scenario', scenarioId);
+        // Hole alle Task-IDs für dieses Szenario
+        const taskIds = tasks.map(t => t.id);
         
-        if (error) throw error;
+        if (taskIds.length > 0) {
+          // Lösche alle Status-Einträge des aktuellen Benutzers für diese Tasks
+          const { error } = await (supabase.from('user_task_status') as any)
+            .delete()
+            .eq('user_id', user.id)
+            .in('task_id', taskIds);
+          
+          if (error) throw error;
+        }
       }
 
       // Reset locally
       const resetTasks = tasks.map((t) => ({ ...t, done: false }));
       setTasks(resetTasks);
-      await saveTasks(resetTasks);
+      
+      // Reset offline status
+      const taskIds = tasks.map(t => t.id);
+      for (const taskId of taskIds) {
+        await updateTaskStatusOffline(user.id, taskId, false);
+      }
 
       // Remove from active scenarios
       const saved = localStorage.getItem('activeScenarios');
@@ -160,6 +229,27 @@ export default function ChecklistPage() {
       router.push('/');
     } catch (error) {
       console.error('Fehler beim Zurücksetzen:', error);
+    }
+  };
+
+  const handleDownloadPdf = async () => {
+    if (!scenario || isGeneratingPdf) return;
+    
+    setIsGeneratingPdf(true);
+    try {
+      // Wir übergeben die bereits gruppierten und sortierten Daten an die PDF-Funktion
+      await generateChecklistPDF(
+        scenario,
+        tasks,
+        groupedTasks,
+        sortedCategories,
+        (category) => getSortedSubcategories(category, Object.keys(groupedTasks[category] || {}))
+      );
+    } catch (error) {
+      console.error("Fehler beim Erstellen des PDFs:", error);
+      alert("Das PDF konnte nicht erstellt werden.");
+    } finally {
+      setIsGeneratingPdf(false);
     }
   };
 
@@ -344,12 +434,14 @@ export default function ChecklistPage() {
         <div className="container mx-auto px-4 py-8 max-w-4xl">
           {/* Header */}
           <div className="mb-6 fade-in">
-            <button
-              onClick={() => router.push('/')}
-              className="text-blue-600 hover:text-blue-700 mb-4 flex items-center gap-2 font-semibold transition-colors"
-            >
-              <span className="text-xl">←</span> Zurück zur Auswahl
-            </button>
+            <Tooltip text="Zurück zur Startseite mit allen Szenarien." position="right">
+              <button
+                onClick={() => router.push('/')}
+                className="text-blue-600 hover:text-blue-700 mb-4 flex items-center gap-2 font-semibold transition-colors"
+              >
+                <span className="text-xl">←</span> Zurück zur Auswahl
+              </button>
+            </Tooltip>
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-3xl font-bold text-gray-800 flex items-center gap-3">
@@ -396,9 +488,11 @@ export default function ChecklistPage() {
                   <p className="text-green-700 mb-4 font-medium">
                     Herzlichen Glückwunsch! Du hast alle Aufgaben abgeschlossen. Gute Reise!
                   </p>
-                  <button onClick={handleReset} className="btn-primary">
-                    Checkliste zurücksetzen und zur Auswahl
-                  </button>
+                  <Tooltip text="Setzt alle Aufgaben zurück und entfernt die Liste von der Startseite.">
+                    <button onClick={handleReset} className="btn-primary">
+                      Checkliste zurücksetzen und zur Auswahl
+                    </button>
+                  </Tooltip>
                 </div>
               </div>
             </div>
@@ -408,32 +502,46 @@ export default function ChecklistPage() {
           <div className="card mb-6 fade-in">
             <div className="flex justify-between items-center mb-6 flex-wrap gap-2">
               <h2 className="text-2xl font-bold text-gray-800">Aufgaben</h2>
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-wrap">
                 {completedCount > 0 && (
-                  <button
-                    onClick={() => setShowAllCompleted(!showAllCompleted)}
-                    className="text-sm px-4 py-2 rounded-xl border-2 border-gray-300 hover:border-green-500 hover:bg-green-50 transition-all flex items-center gap-2 font-semibold"
-                  >
-                    {showAllCompleted ? (
-                      <>
-                        <span className="text-green-600 text-lg">✓</span>
-                        Erledigte ausblenden
-                      </>
-                    ) : (
-                      <>
-                        <span className="text-green-600 text-lg">✓</span>
-                        Alle Erledigten anzeigen
-                      </>
-                    )}
-                  </button>
+                  <Tooltip text="Zeigt alle erledigten Aufgaben an oder blendet sie aus.">
+                    <button
+                      onClick={() => setShowAllCompleted(!showAllCompleted)}
+                      className="text-sm px-4 py-2 rounded-xl border-2 border-gray-300 hover:border-green-500 hover:bg-green-50 transition-all flex items-center gap-2 font-semibold"
+                    >
+                      {showAllCompleted ? (
+                        <>
+                          <span className="text-green-600 text-lg">✓</span>
+                          Erledigte ausblenden
+                        </>
+                      ) : (
+                        <>
+                          <span className="text-green-600 text-lg">✓</span>
+                          Alle Erledigten anzeigen
+                        </>
+                      )}
+                    </button>
+                  </Tooltip>
                 )}
-                <button
-                  onClick={() => setShowAddModal(true)}
-                  className="btn-primary text-sm flex items-center gap-2"
-                >
-                  <span className="text-lg">+</span>
-                  Aufgabe hinzufügen
-                </button>
+                <Tooltip text="Lädt die aktuelle Checkliste als PDF-Datei herunter.">
+                  <button
+                    onClick={handleDownloadPdf}
+                    disabled={isGeneratingPdf}
+                    className="btn-secondary text-sm flex items-center gap-2 disabled:opacity-50"
+                  >
+                    <span className="text-lg">📄</span>
+                    {isGeneratingPdf ? 'PDF wird erstellt...' : 'PDF-Download'}
+                  </button>
+                </Tooltip>
+                <Tooltip text="Fügt eine neue Aufgabe zu dieser Checkliste hinzu.">
+                  <button
+                    onClick={() => setShowAddModal(true)}
+                    className="btn-primary text-sm flex items-center gap-2"
+                  >
+                    <span className="text-lg">+</span>
+                    Aufgabe hinzufügen
+                  </button>
+                </Tooltip>
               </div>
             </div>
 
@@ -553,49 +661,13 @@ export default function ChecklistPage() {
             )}
           </div>
 
-          {/* Contacts */}
-          {contacts.length > 0 && (
-            <div className="card fade-in">
-              <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                <span className="text-3xl">📞</span>
-                Wichtige Kontakte - {scenario.location}
-              </h2>
-              <div className="space-y-3">
-                {contacts.map((contact, index) => (
-                  <div
-                    key={contact.id}
-                    className="p-4 bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl border-2 border-gray-200 hover:border-blue-300 transition-all slide-up"
-                    style={{ animationDelay: `${index * 0.05}s` }}
-                  >
-                    <h3 className="font-bold text-gray-800 text-lg">{contact.name}</h3>
-                    <p className="text-sm text-gray-600 mb-2">{contact.role}</p>
-                    {contact.phone && (
-                      <a
-                        href={`tel:${contact.phone}`}
-                        className="text-blue-600 text-sm hover:underline block mt-1 font-medium"
-                      >
-                        📞 {contact.phone}
-                      </a>
-                    )}
-                    {contact.email && (
-                      <a
-                        href={`mailto:${contact.email}`}
-                        className="text-blue-600 text-sm hover:underline block font-medium"
-                      >
-                        ✉️ {contact.email}
-                      </a>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
           {/* Reset Button */}
           <div className="mt-8 text-center fade-in">
-            <button onClick={handleReset} className="btn-danger px-8">
-              Checkliste zurücksetzen
-            </button>
+            <Tooltip text="Setzt den Status aller Aufgaben in dieser Liste zurück. Die Liste bleibt auf der Startseite erhalten.">
+              <button onClick={handleReset} className="btn-danger px-8">
+                Checkliste zurücksetzen
+              </button>
+            </Tooltip>
           </div>
         </div>
       </div>
