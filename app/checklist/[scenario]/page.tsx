@@ -55,8 +55,23 @@ export default function ChecklistPage() {
   useEffect(() => {
     if (scenario && user) {
       loadData();
+      
+      // Füge Checkliste zu aktiven Checklisten hinzu, falls noch nicht vorhanden - benutzerspezifisch
+      const saved = localStorage.getItem(`activeScenarios_${user.id}`);
+      let activeScenarios: string[] = [];
+      if (saved) {
+        try {
+          activeScenarios = JSON.parse(saved);
+        } catch {
+          activeScenarios = [];
+        }
+      }
+      if (!activeScenarios.includes(scenarioId)) {
+        activeScenarios.push(scenarioId);
+        localStorage.setItem(`activeScenarios_${user.id}`, JSON.stringify(activeScenarios));
+      }
     }
-  }, [scenario, user]);
+  }, [scenario, user, scenarioId]);
 
   const loadData = async () => {
     if (!user) return;
@@ -212,19 +227,21 @@ export default function ChecklistPage() {
         await updateTaskStatusOffline(user.id, taskId, false);
       }
 
-      // Remove from active scenarios
-      const saved = localStorage.getItem('activeScenarios');
-      if (saved) {
-        try {
-          const scenarios = JSON.parse(saved);
-          const updated = scenarios.filter((id: string) => id !== scenarioId);
-          localStorage.setItem('activeScenarios', JSON.stringify(updated));
-        } catch {
-          // Ignore errors
+      // Remove from active scenarios - benutzerspezifisch
+      if (user) {
+        const saved = localStorage.getItem(`activeScenarios_${user.id}`);
+        if (saved) {
+          try {
+            const scenarios = JSON.parse(saved);
+            const updated = scenarios.filter((id: string) => id !== scenarioId);
+            localStorage.setItem(`activeScenarios_${user.id}`, JSON.stringify(updated));
+          } catch {
+            // Ignore errors
+          }
         }
+        // Also remove old single scenario for backwards compatibility
+        localStorage.removeItem('activeScenario');
       }
-      // Also remove old single scenario for backwards compatibility
-      localStorage.removeItem('activeScenario');
       
       router.push('/');
     } catch (error) {

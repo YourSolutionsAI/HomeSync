@@ -24,24 +24,32 @@ export default function HomePage() {
   const [showHelpModal, setShowHelpModal] = useState(false);
 
   useEffect(() => {
-    // Check if there are active scenarios in localStorage
-    const saved = localStorage.getItem('activeScenarios');
-    if (saved) {
-      try {
-        const scenarios = JSON.parse(saved);
-        setActiveScenarios(Array.isArray(scenarios) ? scenarios : []);
-      } catch {
+    // Check if there are active scenarios in localStorage - benutzerspezifisch
+    if (user) {
+      const saved = localStorage.getItem(`activeScenarios_${user.id}`);
+      if (saved) {
+        try {
+          const scenarios = JSON.parse(saved);
+          setActiveScenarios(Array.isArray(scenarios) ? scenarios : []);
+        } catch {
+          setActiveScenarios([]);
+        }
+      } else {
         setActiveScenarios([]);
       }
+    } else {
+      setActiveScenarios([]);
     }
-  }, []);
+  }, [user]);
 
   const handleScenarioSelect = (scenarioId: string) => {
-    // Add to active scenarios if not already there
+    if (!user) return;
+    // Add to active scenarios if not already there - benutzerspezifisch
     const updated = activeScenarios.includes(scenarioId)
       ? activeScenarios
       : [...activeScenarios, scenarioId];
-    localStorage.setItem('activeScenarios', JSON.stringify(updated));
+    setActiveScenarios(updated);
+    localStorage.setItem(`activeScenarios_${user.id}`, JSON.stringify(updated));
     router.push(`/checklist/${scenarioId}`);
   };
 
@@ -77,10 +85,10 @@ export default function HomePage() {
         if (error) throw error;
       }
 
-      // Entferne aus aktiven Checklisten
+      // Entferne aus aktiven Checklisten - benutzerspezifisch
       const updated = activeScenarios.filter((id) => id !== scenarioToReset);
       setActiveScenarios(updated);
-      localStorage.setItem('activeScenarios', JSON.stringify(updated));
+      localStorage.setItem(`activeScenarios_${user.id}`, JSON.stringify(updated));
 
       // Erfolgsmeldung
       setToast({
@@ -101,10 +109,20 @@ export default function HomePage() {
 
   const handleLogout = async () => {
     try {
-      await signOut();
+      // Hole die aktuelle Session direkt von Supabase, um sicherzugehen
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (session) {
+        await signOut();
+      }
+      
+      // Unabhängig vom Fehler zur Login-Seite weiterleiten
       router.push('/login');
+
     } catch (error) {
       console.error('Fehler beim Abmelden:', error);
+      // Selbst wenn ein Fehler auftritt, zur Sicherheit weiterleiten
+      router.push('/login');
     }
   };
 
